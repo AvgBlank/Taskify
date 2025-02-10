@@ -1,9 +1,16 @@
 "use client";
 import { FormEvent, useState } from "react";
-
-// TODO: Check if cookie for `refreshToken` exists, if so, redirect to `/dashboard`.
+import checkAuth from "@/components/IsAuthenticated";
 
 const Register = () => {
+  // Checking for valid cookies
+  checkAuth().then((isAuthenticated) => {
+    if (isAuthenticated) {
+      window.location.href = "/dashboard";
+      return;
+    }
+  });
+
   interface Types {
     name: string;
     email: string;

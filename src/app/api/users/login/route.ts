@@ -5,10 +5,8 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-const ACCESS_TOKEN_EXPIRY = "1d"; // Short-lived token
-const REFRESH_TOKEN_EXPIRY = "7d"; // Long-lived refresh token
-const JWT_SECRET = process.env.JWT_SECRET!;
-const REFRESH_SECRET = process.env.REFRESH_SECRET!; // Separate secret for refresh tokens
+const SESSION_EXPIRY = "1y"; // Long-lived token
+const SESSION_SECRET = process.env.SESSION_SECRET!; // Separate secret for token
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,27 +32,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate Access and Refresh Tokens
-    const accessToken = jwt.sign({ Id: user.id }, JWT_SECRET, {
-      expiresIn: ACCESS_TOKEN_EXPIRY,
-    });
-    const refreshToken = jwt.sign({ Id: user.id }, REFRESH_SECRET, {
-      expiresIn: REFRESH_TOKEN_EXPIRY,
+    // Generate Tokens
+    const session = jwt.sign({ Id: user.id }, SESSION_SECRET, {
+      expiresIn: SESSION_EXPIRY,
     });
 
     // Set refresh token as an HTTP-only cookie
     const response = NextResponse.json({
-      message: "Login successful",
-      accessToken,
+      message: "Registered Succesfully",
     });
 
     response.cookies.set({
-      name: "refreshToken",
-      value: refreshToken,
+      name: "SessionToken",
+      value: session,
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       path: "/",
-      maxAge: 60 * 60 * 24 * 7, // 7 days
+      maxAge: 60 * 60 * 24 * 365, // 365 days
     });
 
     return response;
