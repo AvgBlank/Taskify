@@ -35,10 +35,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate Access and Refresh Tokens
-    const accessToken = jwt.sign({ userId: user.id }, JWT_SECRET, {
+    const accessToken = jwt.sign({ Id: user.id }, JWT_SECRET, {
       expiresIn: ACCESS_TOKEN_EXPIRY,
     });
-    const refreshToken = jwt.sign({ userId: user.id }, REFRESH_SECRET, {
+    const refreshToken = jwt.sign({ Id: user.id }, REFRESH_SECRET, {
       expiresIn: REFRESH_TOKEN_EXPIRY,
     });
 
