@@ -8,7 +8,7 @@ type TokenPayload = {
 };
 
 export async function GET(req: NextRequest) {
-  const refreshToken = req.cookies.get("session")?.value;
+  const refreshToken = req.cookies.get("SessionToken")?.value;
 
   if (!refreshToken) {
     return NextResponse.json({ valid: false });

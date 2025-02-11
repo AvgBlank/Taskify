@@ -7,7 +7,6 @@ const Register = () => {
   checkAuth().then((isAuthenticated) => {
     if (isAuthenticated) {
       window.location.href = "/dashboard";
-      return;
     }
   });
 
@@ -30,6 +29,7 @@ const Register = () => {
     pass: "",
     confirmPass: "",
   });
+  const [submitError, setSubmitError] = useState("");
 
   const placeholders = {
     name: "Full Name",
@@ -94,13 +94,13 @@ const Register = () => {
 
       if (!response.ok) {
         const data = await response.json();
-        alert(data.error || "Registration failed");
+        setSubmitError(data.error || "Registration failed");
         return;
       }
 
-      alert("Registration successful!");
+      window.location.href = "/dashboard";
     } catch {
-      alert("Network error. Please try again.");
+      setSubmitError("Network error. Please try again.");
     }
   };
 
@@ -110,7 +110,7 @@ const Register = () => {
         {Object.keys(details).map((key) => (
           <input
             key={key}
-            type={key === "pass" || key === "confirmPass" ? "password" : "text"}
+            type={key.toLowerCase().includes("pass") ? "password" : "text"}
             placeholder={placeholders[key as keyof Types]}
             value={details[key as keyof Types]}
             onChange={(e) => {
@@ -124,9 +124,17 @@ const Register = () => {
         <button type="submit" className="bg-red-500 text-white">
           Register
         </button>
-        {(error.name || error.email || error.pass || error.confirmPass) && (
+        {(error.name ||
+          error.email ||
+          error.pass ||
+          error.confirmPass ||
+          submitError) && (
           <p className="text-red-600">
-            {error.name || error.email || error.pass || error.confirmPass}
+            {error.name ||
+              error.email ||
+              error.pass ||
+              error.confirmPass ||
+              submitError}
           </p>
         )}
       </form>
