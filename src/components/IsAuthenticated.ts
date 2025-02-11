@@ -9,7 +9,7 @@ async function checkAuth() {
     });
 
     const result = await response.json();
-    return result.valid;
+    return [result.valid, result.userId, result.name];
   } catch (error) {
     console.error("Error verifying token:", error);
     return false;

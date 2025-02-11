@@ -5,8 +5,8 @@ import { NextResponse } from "next/server";
 
 const prisma = new PrismaClient();
 
-const SESSION_EXPIRY = "1y"; // Long-lived token
-const SESSION_SECRET = process.env.SESSION_SECRET!; // Separate secret for token
+const SESSION_EXPIRY = "1y";
+const SESSION_SECRET = process.env.SESSION_SECRET!;
 
 export async function POST(request: Request) {
   try {
@@ -28,15 +28,21 @@ export async function POST(request: Request) {
       );
     }
 
-    // Get number of users
-    const usersCount = await prisma.user.count();
-
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Generating random User ID
+    let randomId = Math.floor(1000000000 + Math.random() * 9000000000);
+
+    while (
+      await prisma.user.findUnique({ where: { id: randomId.toString() } })
+    ) {
+      randomId = Math.floor(1000000000 + Math.random() * 9000000000);
+    }
+
     const newUser = await prisma.user.create({
       data: {
-        id: usersCount + 1,
+        id: randomId.toString(),
         name,
         email,
         password: hashedPassword,
@@ -44,7 +50,7 @@ export async function POST(request: Request) {
     });
 
     // Generate Tokens
-    const session = jwt.sign({ Id: usersCount + 1 }, SESSION_SECRET, {
+    const session = jwt.sign({ Id: randomId.toString() }, SESSION_SECRET, {
       expiresIn: SESSION_EXPIRY,
     });
 
@@ -65,8 +71,9 @@ export async function POST(request: Request) {
 
     return response;
   } catch (error) {
+    console.error(error);
     return NextResponse.json(
-      { error: error || "Failed to register user" },
+      { error: typeof error === "string" ? error : "Failed to register user" },
       { status: 500 },
     );
   }

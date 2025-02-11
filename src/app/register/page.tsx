@@ -1,15 +1,8 @@
 "use client";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import checkAuth from "@/components/IsAuthenticated";
 
 const Register = () => {
-  // Checking for valid cookies
-  checkAuth().then((isAuthenticated) => {
-    if (isAuthenticated) {
-      window.location.href = "/dashboard";
-    }
-  });
-
   interface Types {
     name: string;
     email: string;
@@ -30,13 +23,26 @@ const Register = () => {
     confirmPass: "",
   });
   const [submitError, setSubmitError] = useState("");
-
+  const [loading, setLoading] = useState(true);
   const placeholders = {
     name: "Full Name",
     email: "Email",
     pass: "Password",
     confirmPass: "Confirm Password",
   };
+
+  // Checking for valid cookies
+  useEffect(() => {
+    checkAuth().then((isAuthenticated) => {
+      if (isAuthenticated[0 as keyof typeof isAuthenticated]) {
+        window.location.href = "/dashboard";
+      } else {
+        setLoading(false);
+      }
+    });
+  });
+
+  if (loading) return <div>Loading...</div>;
 
   const validations = (key: keyof Types) => {
     const errors = {

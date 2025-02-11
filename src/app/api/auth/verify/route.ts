@@ -1,5 +1,8 @@
-import jwt from "jsonwebtoken";
+import { PrismaClient } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
+
+const prisma = new PrismaClient();
 
 type TokenPayload = {
   Id: number;
@@ -19,7 +22,17 @@ export async function GET(req: NextRequest) {
       refreshToken,
       process.env.SESSION_SECRET as string,
     ) as TokenPayload;
-    return NextResponse.json({ valid: true, userId: payload.Id });
+
+    const name = await prisma.user.findUnique({
+      where: { id: payload.Id },
+      select: { name: true },
+    });
+
+    return NextResponse.json({
+      valid: true,
+      userId: payload.Id,
+      name: name?.name,
+    });
   } catch (error) {
     console.error("Token verification failed:", error);
     return NextResponse.json({ valid: false });

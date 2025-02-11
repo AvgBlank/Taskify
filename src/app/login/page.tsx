@@ -1,30 +1,35 @@
 "use client";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import checkAuth from "@/components/IsAuthenticated";
 
 const Login = () => {
-  // Checking for valid cookies
-  checkAuth().then((isAuthenticated) => {
-    if (isAuthenticated) {
-      window.location.href = "/dashboard";
-    }
-  });
-
   interface Types {
     email: string;
     pass: string;
   }
-
   const [details, setDetails] = useState<Types>({
     email: "",
     pass: "",
   });
   const [error, setError] = useState("");
-
+  const [loading, setLoading] = useState(true);
   const placeholders = {
     email: "Email",
     pass: "Password",
   };
+
+  // Checking for valid cookies
+  useEffect(() => {
+    checkAuth().then((isAuthenticated) => {
+      if (isAuthenticated[0 as keyof typeof isAuthenticated]) {
+        window.location.href = "/dashboard";
+      } else {
+        setLoading(false);
+      }
+    });
+  }, []);
+
+  if (loading) return <div>Loading...</div>;
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
