@@ -5,7 +5,7 @@ import jwt from "jsonwebtoken";
 const prisma = new PrismaClient();
 
 type TokenPayload = {
-  Id: number;
+  Id: string;
   iat?: number;
   exp?: number;
 };
@@ -28,11 +28,22 @@ export async function GET(req: NextRequest) {
       select: { name: true },
     });
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       valid: true,
       userId: payload.Id,
       name: name?.name,
     });
+
+    response.cookies.set({
+      name: "SessionToken",
+      value: refreshToken,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+    });
+
+    return response;
   } catch (error) {
     console.error("Token verification failed:", error);
     return NextResponse.json({ valid: false });

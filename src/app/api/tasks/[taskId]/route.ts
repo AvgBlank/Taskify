@@ -1,19 +1,17 @@
 import { PrismaClient } from "@prisma/client";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import checkAuth from "@/components/IsAuthenticated";
 
 const prisma = new PrismaClient();
 
 export async function DELETE(
-  _: Request,
-  { params }: { params: { taskId: string } },
+  request: NextRequest,
+  props: { params: Promise<{ taskId: string }> },
 ) {
-  checkAuth().then((isAuthenticated) => {
+  const params = await props.params;
+  checkAuth(request).then((isAuthenticated) => {
     if (!isAuthenticated[0 as keyof typeof isAuthenticated]) {
-      return NextResponse.json(
-        { error: "Not authenticated" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Not authenticated" }, { status: 400 });
     }
   });
   const taskId = params.taskId;
@@ -32,18 +30,17 @@ export async function DELETE(
 }
 
 export async function PATCH(
-  request: Request,
-  { params }: { params: { taskId: string } },
+  request: NextRequest,
+  props: { params: Promise<{ taskId: string }> },
 ) {
-  checkAuth().then((isAuthenticated) => {
+  const params = await props.params;
+  checkAuth(request).then((isAuthenticated) => {
     if (!isAuthenticated[0 as keyof typeof isAuthenticated]) {
-      return NextResponse.json(
-        { error: "Not authenticated" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Not authenticated" }, { status: 400 });
     }
   });
   const taskId = params.taskId;
+
   const body = await request.json();
 
   try {

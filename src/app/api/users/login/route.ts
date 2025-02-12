@@ -5,7 +5,7 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-const SESSION_EXPIRY = "1y"; // Long-lived token
+const SESSION_EXPIRY = "7d"; // Long-lived token
 const SESSION_SECRET = process.env.SESSION_SECRET!; // Separate secret for token
 
 export async function POST(request: NextRequest) {
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       path: "/",
-      maxAge: 60 * 60 * 24 * 365, // 365 days
+      maxAge: 60 * 60 * 24 * 7, // 7 days
     });
 
     return response;

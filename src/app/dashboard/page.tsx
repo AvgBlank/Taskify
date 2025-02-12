@@ -10,7 +10,7 @@ interface Task {
 }
 
 const Dashboard = () => {
-  const [userId, setUserId] = useState<number | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [creatingTask, setCreatingTask] = useState<Task | null>(null);
@@ -40,7 +40,7 @@ const Dashboard = () => {
 
   if (!userId) return <div>Loading...</div>;
 
-  const GetTasks = async (userId: number) => {
+  const GetTasks = async (userId: string) => {
     const response = await fetch(`/api/tasks?userId=${userId}`, {
       method: "GET",
     });
@@ -114,7 +114,7 @@ const Dashboard = () => {
 
   return (
     <>
-      Welcome - User ID: {userId} - Name: {name}
+      Welcome Name: {name}
       <table>
         <thead>
           <tr>

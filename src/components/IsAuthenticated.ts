@@ -1,8 +1,17 @@
-async function checkAuth() {
+import { NextRequest } from "next/server";
+
+async function checkAuth(req?: NextRequest) {
   const controller = new AbortController();
+  let url;
 
   try {
-    const response = await fetch("/api/auth/verify", {
+    if (req) {
+      url = new URL("/api/auth/verify", req.url).toString();
+    } else {
+      url = "/api/auth/verify";
+    }
+
+    const response = await fetch(url, {
       method: "GET",
       credentials: "include",
       signal: controller.signal,
