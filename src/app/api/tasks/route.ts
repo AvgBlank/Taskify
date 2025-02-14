@@ -1,16 +1,13 @@
 import { PrismaClient } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
-import checkAuth from "@/components/IsAuthenticated";
+import checkAuth from "@/lib/is-authenticated";
 
 const prisma = new PrismaClient();
 
 export async function GET(request: NextRequest) {
   checkAuth(request).then((isAuthenticated) => {
     if (!isAuthenticated[0 as keyof typeof isAuthenticated]) {
-      return NextResponse.json(
-        { error: "Not authenticated" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Not authenticated" }, { status: 400 });
     }
   });
 
@@ -26,7 +23,8 @@ export async function GET(request: NextRequest) {
       where: { userId: userId },
     });
     return NextResponse.json(tasks);
-  } catch {
+  } catch (error) {
+    console.log(error);
     return NextResponse.json(
       { error: "Failed to fetch tasks" },
       { status: 500 },
@@ -37,10 +35,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   checkAuth(request).then((isAuthenticated) => {
     if (!isAuthenticated[0 as keyof typeof isAuthenticated]) {
-      return NextResponse.json(
-        { error: "Not authenticated" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Not authenticated" }, { status: 400 });
     }
   });
 

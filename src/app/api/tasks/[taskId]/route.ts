@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
-import checkAuth from "@/components/IsAuthenticated";
+import checkAuth from "@/lib/is-authenticated";
 
 const prisma = new PrismaClient();
 
@@ -42,6 +42,7 @@ export async function PATCH(
   const taskId = params.taskId;
 
   const body = await request.json();
+  console.log(body);
 
   try {
     const updatedTask = await prisma.task.update({
@@ -49,7 +50,8 @@ export async function PATCH(
       data: body,
     });
     return NextResponse.json(updatedTask);
-  } catch {
+  } catch(e) {
+    console.log(e);
     return NextResponse.json(
       { error: "Failed to update task" },
       { status: 500 },
