@@ -6,7 +6,7 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 const SESSION_EXPIRY = "7d"; // Long-lived token
-const SESSION_SECRET = process.env.SESSION_SECRET!; // Separate secret for token
+const SESSION_SECRET = process.env.NEXT_PUBLIC_SESSION_SECRET!; // Separate secret for token
 
 export async function POST(request: NextRequest) {
   try {

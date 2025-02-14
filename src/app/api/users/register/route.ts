@@ -6,7 +6,7 @@ import { NextResponse } from "next/server";
 const prisma = new PrismaClient();
 
 const SESSION_EXPIRY = "1y";
-const SESSION_SECRET = process.env.SESSION_SECRET!;
+const SESSION_SECRET = process.env.NEXT_PUBLIC_SESSION_SECRET!;
 
 export async function POST(request: Request) {
   try {

@@ -5,7 +5,7 @@ import jwt from "jsonwebtoken";
 const prisma = new PrismaClient();
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!;
 const GOOGLE_CLIENT_SECRET = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_SECRET!;
-const SESSION_SECRET = process.env.SESSION_SECRET!;
+const SESSION_SECRET = process.env.NEXT_PUBLIC_SESSION_SECRET!;
 const SESSION_EXPIRY = "1y";
 
 export async function GET(req: Request) {

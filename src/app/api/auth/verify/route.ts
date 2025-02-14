@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
   try {
     const payload = jwt.verify(
       refreshToken,
-      process.env.SESSION_SECRET as string,
+      process.env.NEXT_PUBLIC_SESSION_SECRET as string,
     ) as TokenPayload;
 
     const name = await prisma.user.findUnique({
