@@ -7,13 +7,25 @@ interface Task {
   title: string;
   priority: string;
   status: string;
+  labels: { id?: string; name: string }[];
+}
+interface EditingCreatingTask {
+  id: number;
+  title: string;
+  priority: string;
+  status: string;
+  labels: string[];
 }
 
 const Dashboard = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [creatingTask, setCreatingTask] = useState<Task | null>(null);
+  const [editingTask, setEditingTask] = useState<EditingCreatingTask | null>(
+    null,
+  );
+  const [creatingTask, setCreatingTask] = useState<EditingCreatingTask | null>(
+    null,
+  );
   const [name, setName] = useState<string>("");
   const [showCompleted, setShowCompleted] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
@@ -56,11 +68,14 @@ const Dashboard = () => {
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
+    const vals =
+      e.target.name == "labels" ? e.target.value.split(" ") : e.target.value;
+
     if (editingTask) {
-      setEditingTask({ ...editingTask, [e.target.name]: e.target.value });
+      setEditingTask({ ...editingTask, [e.target.name]: vals });
       setCreatingTask(null);
     } else if (creatingTask) {
-      setCreatingTask({ ...creatingTask, [e.target.name]: e.target.value });
+      setCreatingTask({ ...creatingTask, [e.target.name]: vals });
       setEditingTask(null);
     }
   };
@@ -75,43 +90,52 @@ const Dashboard = () => {
     }
   };
 
-  const UpdateTask = async (task: Task) => {
+  const UpdateTask = async (task: EditingCreatingTask) => {
     if (task.title === "") {
       setError("Title is required");
       return;
     }
     setError("");
+
+    const payload = {
+      ...task,
+      labels: task.labels?.length > 0 ? task.labels : [],
+    };
     await fetch(`/api/tasks/${task.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(task),
+      body: JSON.stringify(payload),
     });
     GetTasks(userId!).then(setTasks);
   };
 
-  const CreateTask = async (task: Task) => {
-    if (task.title === "") {
+  const CreateTask = async (task: EditingCreatingTask) => {
+    if (task.title.trim() === "") {
       setError("Title is required");
       return;
     }
     setError("");
+
+    const payload = {
+      ...task,
+      labels: task.labels?.length > 0 ? task.labels : [],
+      userId,
+    };
     await fetch(`/api/tasks`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...task, userId }),
+      body: JSON.stringify(payload),
     });
     GetTasks(userId!).then(setTasks);
   };
 
   const DeleteTask = async (task: Task) => {
-    console.log(task);
     await fetch(`/api/tasks/${task.id}`, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
     });
     GetTasks(userId!).then(setTasks);
   };
-
   return (
     <>
       Welcome Name: {name}
@@ -121,6 +145,7 @@ const Dashboard = () => {
             <th className="border p-2 border-white">Title</th>
             <th className="border p-2 border-white">Priority</th>
             <th className="border p-2 border-white">Status</th>
+            <th className="border p-2 border-white">Labels</th>
             <th className="border p-2 border-white">
               {!creatingTask && (
                 <button
@@ -130,6 +155,7 @@ const Dashboard = () => {
                       title: "",
                       priority: "Low",
                       status: "Pending",
+                      labels: [],
                     });
                     setEditingTask(null);
                   }}
@@ -149,7 +175,7 @@ const Dashboard = () => {
                   name="title"
                   value={creatingTask.title}
                   onChange={handleChange}
-                  className="text-black"
+                  className="text-white"
                 />
               </td>
               <td className="border p-2 border-white">
@@ -173,6 +199,14 @@ const Dashboard = () => {
                   <option value="In Progress">In Progress</option>
                   <option value="Completed">Completed</option>
                 </select>
+              </td>
+              <td className="border p-2 border-white">
+                <input
+                  name="labels"
+                  value={creatingTask.labels.join(" ")}
+                  onChange={handleChange}
+                  className="text-white"
+                />
               </td>
               <td className="border p-2 border-white">
                 <button onClick={handleSave} className="bg-green-500 p-1">
@@ -205,7 +239,7 @@ const Dashboard = () => {
                         name="title"
                         value={editingTask.title}
                         onChange={handleChange}
-                        className="text-black"
+                        className="text-white"
                       />
                     ) : (
                       task.title
@@ -243,6 +277,18 @@ const Dashboard = () => {
                   </td>
                   <td className="border p-2 border-white">
                     {editingTask?.id === task.id ? (
+                      <input
+                        name="labels"
+                        value={editingTask.labels.join(" ")}
+                        onChange={handleChange}
+                        className="text-white"
+                      />
+                    ) : (
+                      task.labels.map((label) => label.name).join(" ")
+                    )}
+                  </td>
+                  <td className="border p-2 border-white">
+                    {editingTask?.id === task.id ? (
                       <>
                         <button
                           onClick={handleSave}
@@ -261,7 +307,10 @@ const Dashboard = () => {
                       <>
                         <button
                           onClick={() => {
-                            setEditingTask(task);
+                            setEditingTask({
+                              ...task,
+                              labels: task.labels.map((label) => label.name),
+                            });
                             setCreatingTask(null);
                           }}
                           className="bg-blue-500 p-1 mr-2"

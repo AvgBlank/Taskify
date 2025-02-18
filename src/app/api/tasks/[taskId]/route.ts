@@ -42,16 +42,32 @@ export async function PATCH(
   const taskId = params.taskId;
 
   const body = await request.json();
-  console.log(body);
 
   try {
+    const { title, priority, status, labels } = body;
+
     const updatedTask = await prisma.task.update({
       where: { id: taskId },
-      data: body,
+      data: {
+        title,
+        priority,
+        status,
+        labels: labels?.length
+          ? {
+              set: [],
+              connectOrCreate: labels.map((label: string) => ({
+                where: { name: label },
+                create: { name: label },
+              })),
+            }
+          : { set: [] },
+      },
+      include: { labels: true },
     });
+
     return NextResponse.json(updatedTask);
-  } catch(e) {
-    console.log(e);
+  } catch (e) {
+    console.error(e);
     return NextResponse.json(
       { error: "Failed to update task" },
       { status: 500 },

@@ -28,6 +28,12 @@ export async function GET(req: NextRequest) {
       select: { name: true },
     });
 
+    if (!name) {
+      const response = NextResponse.json({ valid: false });
+      response.cookies.delete("SessionToken");
+      return response;
+    }
+
     const response = NextResponse.json({
       valid: true,
       userId: payload.Id,

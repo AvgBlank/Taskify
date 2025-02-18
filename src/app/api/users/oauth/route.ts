@@ -54,18 +54,9 @@ export async function GET(req: Request) {
     let existingUser = await prisma.user.findUnique({ where: { email } });
 
     if (!existingUser) {
-      // Generate unique user ID
-      let randomId = Math.floor(1000000000 + Math.random() * 9000000000);
-      while (
-        await prisma.user.findUnique({ where: { id: randomId.toString() } })
-      ) {
-        randomId = Math.floor(1000000000 + Math.random() * 9000000000);
-      }
-
       // Create new user
       existingUser = await prisma.user.create({
         data: {
-          id: randomId.toString(),
           name: name ?? "Unknown User",
           email,
           password: null,

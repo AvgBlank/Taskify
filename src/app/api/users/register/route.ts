@@ -31,18 +31,8 @@ export async function POST(request: Request) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Generating random User ID
-    let randomId = Math.floor(1000000000 + Math.random() * 9000000000);
-
-    while (
-      await prisma.user.findUnique({ where: { id: randomId.toString() } })
-    ) {
-      randomId = Math.floor(1000000000 + Math.random() * 9000000000);
-    }
-
     const newUser = await prisma.user.create({
       data: {
-        id: randomId.toString(),
         name,
         email,
         password: hashedPassword,
@@ -50,7 +40,7 @@ export async function POST(request: Request) {
     });
 
     // Generate Tokens
-    const session = jwt.sign({ Id: randomId.toString() }, SESSION_SECRET, {
+    const session = jwt.sign({ Id: newUser.id }, SESSION_SECRET, {
       expiresIn: SESSION_EXPIRY,
     });
 

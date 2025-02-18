@@ -21,10 +21,11 @@ export async function GET(request: NextRequest) {
   try {
     const tasks = await prisma.task.findMany({
       where: { userId: userId },
+      include: { labels: true },
     });
     return NextResponse.json(tasks);
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return NextResponse.json(
       { error: "Failed to fetch tasks" },
       { status: 500 },
@@ -42,27 +43,29 @@ export async function POST(request: NextRequest) {
   const body = await request.json();
 
   try {
-    const { title, priority, status, userId } = body;
-
-    let randomId = Math.floor(1000000000 + Math.random() * 9000000000);
-
-    while (
-      await prisma.task.findUnique({ where: { id: randomId.toString() } })
-    ) {
-      randomId = Math.floor(1000000000 + Math.random() * 9000000000);
-    }
+    const { title, priority, status, userId, labels } = body;
 
     const newTask = await prisma.task.create({
       data: {
-        id: randomId.toString(),
         title,
         priority,
         status,
-        userId: userId,
+        userId,
+        labels: labels?.length
+          ? {
+              connectOrCreate: labels.map((label: string) => ({
+                where: { name: label },
+                create: { name: label },
+              })),
+            }
+          : { set: [] },
       },
+      include: { labels: true },
     });
+
     return NextResponse.json(newTask, { status: 201 });
-  } catch {
+  } catch (e) {
+    console.error(e);
     return NextResponse.json(
       { error: "Failed to create task" },
       { status: 500 },
