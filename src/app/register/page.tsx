@@ -39,12 +39,6 @@ export default function Register() {
   const [notyf, setNotyf] = useState<Notyf | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [confShowPassword, setConfShowPassword] = useState(false);
-  //const placeholders = {
-  //  name: "Full Name",
-  //  email: "Email",
-  //  pass: "Password",
-  //  confirmPass: "Confirm Password",
-  //};
 
   useEffect(() => {
     setNotyf(new Notyf());
@@ -59,23 +53,6 @@ export default function Register() {
       }
     });
   });
-
-  if (loading) {
-    return (
-      <div className="h-screen w-screen flex items-center justify-center">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="animate-spin"
-          width="32"
-          height="32"
-          fill="#000000"
-          viewBox="0 0 256 256"
-        >
-          <path d="M236,128a108,108,0,0,1-216,0c0-42.52,24.73-81.34,63-98.9A12,12,0,1,1,93,50.91C63.24,64.57,44,94.83,44,128a84,84,0,0,0,168,0c0-33.17-19.24-63.43-49-77.09A12,12,0,1,1,173,29.1C211.27,46.66,236,85.48,236,128Z"></path>
-        </svg>
-      </div>
-    );
-  }
 
   const validations = (key: keyof RegisterFormData) => {
     const errors = {
@@ -146,32 +123,22 @@ export default function Register() {
     }
   };
 
-  //return (
-  //  <>
-  //    <form className="text-black" noValidate onSubmit={handleSubmit}>
-  //      {Object.keys(details).map((key) => (
-  //        <input
-  //          key={key}
-  //          type={key.toLowerCase().includes("pass") ? "password" : "text"}
-  //          placeholder={placeholders[key as keyof RegisterFormData]}
-  //          value={details[key as keyof RegisterFormData]}
-  //          onChange={(e) => {
-  //            setDetails({ ...details, [key]: e.target.value });
-  //          }}
-  //          onBlur={() => {
-  //            const errorMsg = validations(key as keyof RegisterFormData)();
-  //            if (errorMsg && notyf) {
-  //              notyf.error(errorMsg);
-  //            }
-  //          }}
-  //        />
-  //      ))}
-  //      <button type="submit" className="bg-red-500 text-white">
-  //        Register
-  //      </button>
-  //    </form>
-  //  </>
-  //);
+  if (loading) {
+    return (
+      <div className="h-screen w-screen flex items-center justify-center">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="animate-spin"
+          width="32"
+          height="32"
+          fill="#000000"
+          viewBox="0 0 256 256"
+        >
+          <path d="M236,128a108,108,0,0,1-216,0c0-42.52,24.73-81.34,63-98.9A12,12,0,1,1,93,50.91C63.24,64.57,44,94.83,44,128a84,84,0,0,0,168,0c0-33.17-19.24-63.43-49-77.09A12,12,0,1,1,173,29.1C211.27,46.66,236,85.48,236,128Z"></path>
+        </svg>
+      </div>
+    );
+  }
 
   return (
     <main className="flex min-h-screen items-center">

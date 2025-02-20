@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
                 create: { name: label },
               })),
             }
-          : { set: [] },
+          : {},
       },
       include: { labels: true },
     });

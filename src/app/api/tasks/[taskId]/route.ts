@@ -60,7 +60,7 @@ export async function PATCH(
                 create: { name: label },
               })),
             }
-          : { set: [] },
+          : {},
       },
       include: { labels: true },
     });
