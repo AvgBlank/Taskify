@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { FormEvent, useEffect, useState } from "react";
-import checkAuth from "@/lib/is-authenticated";
+import checkAuth from "@/lib/IsAuthenticated";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
