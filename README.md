@@ -1,36 +1,128 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 📝 Taskify - Task Management Application
 
-## Getting Started
+## Overview
 
-First, run the development server:
+Taskify is a modern task management application designed to help users efficiently organize and track their tasks. Built with a robust backend powered by Next.js, PostgreSQL, and Prisma ORM, Taskify offers a seamless experience for managing daily to-dos, project tasks, and more. The application emphasizes practicality, usability, and reliability, enabling users to handle their tasks with ease.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Live Preview
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Experience Taskify in action by visiting the live application hosted on Vercel: [https://taskify-beta-ten.vercel.app](https://taskify-beta-ten.vercel.app)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Setting up with Docker
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Prerequisites
 
-## Learn More
+Ensure you have Docker installed on your system.
 
-To learn more about Next.js, take a look at the following resources:
+- **[Docker](https://www.docker.com/)**: Download and install Docker.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Installation Steps
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. **Clone the repository**
 
-## Deploy on Vercel
+   ```bash
+   git clone https://github.com/AvgBlank/Taskify.git
+   cd Taskify
+   ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+2. **Set up environment variables**
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+   - Create a `.env` file in the root directory and add the following variables:
+     ```env
+     NEXT_PUBLIC_SESSION_SECRET="your_random_secret"
+     NEXT_PUBLIC_GOOGLE_CLIENT_ID="your_google_client_id"
+     NEXT_PUBLIC_GOOGLE_CLIENT_SECRET="your_google_client_secret"
+     NEXT_PUBLIC_REDIRECT_URI="http://localhost:3000/api/users/oauth"
+     ```
+
+3. **Run the containers**
+
+   - Start the PostgreSQL and Next.js server using Docker Compose:
+     ```bash
+     docker-compose up --build -d
+     ```
+
+4. **Open your browser**
+
+   - Navigate to `http://localhost:3000/` to see the application running.
+
+---
+
+## Setting up Locally (without Docker)
+
+### Prerequisites
+
+Ensure you have the following installed on your system:
+
+- **Node.js**: [Download and install Node.js](https://nodejs.org/)
+- **PostgreSQL**: [Download and install PostgreSQL](https://www.postgresql.org/download/)
+
+### Installation Steps
+
+1. **Clone the repository**
+
+   ```bash
+   git clone https://github.com/AvgBlank/Taskify.git
+   cd Taskify
+   ```
+
+2. **Install dependencies**
+
+   ```bash
+   npm install
+   ```
+
+3. **Set up environment variables**
+
+   - Create a `.env` file and add the following variables:
+     ```env
+     NEXT_PUBLIC_DATABASE_URL="PostgreSQL database URL"
+     NEXT_PUBLIC_SESSION_SECRET="Randomly Generated Key"
+     NEXT_PUBLIC_GOOGLE_CLIENT_ID="Google Client ID"
+     NEXT_PUBLIC_GOOGLE_CLIENT_SECRET="Google Client Secret"
+     NEXT_PUBLIC_REDIRECT_URI="http://localhost:3000/api/users/oauth"
+     ```
+
+4. **Initialize the database**
+
+   - Run the following command to apply the Prisma schema to your PostgreSQL database:
+
+     ```bash
+     npx prisma migrate dev --name init
+     ```
+
+   - You may have to run the following command to generate the Prisma client in case you get any errors:
+     ```bash
+     npx prisma generate
+     ```
+
+5. **Start the development server**
+
+   ```bash
+   npm run dev
+   ```
+
+6. **Open your browser**
+
+   - Navigate to `http://localhost:3000/` to see the application running locally.
+
+---
+
+## Tech Stack
+
+- **[Next.js](https://nextjs.org/)**: A React framework for building fast and user-friendly web applications.
+- **[TypeScript](https://www.typescriptlang.org/)**: A strongly typed programming language that builds on JavaScript.
+- **[Tailwind CSS](https://tailwindcss.com/)**: Utility-first CSS framework for styling the application.
+- **[PostgreSQL](https://www.postgresql.org/)**: A powerful, open-source relational database system.
+- **[Prisma ORM](https://www.prisma.io/)**: A next-generation ORM for Node.js and TypeScript.
+
+### Libraries and Tools Used
+
+- **[bcrypt](https://www.npmjs.com/package/bcrypt)**: For hashing and securing user passwords.
+- **[JWT (jsonwebtoken)](https://www.npmjs.com/package/jsonwebtoken)**: Used for authentication and secure user sessions.
+- **[ShadCN](https://ui.shadcn.com/)**: Pre-built UI components styled with Tailwind CSS.
+- **[Radix UI](https://www.radix-ui.com/)**: Accessible UI components for dropdowns, select inputs, and more.
+- **[Lucide React](https://lucide.dev/)**: Icon library used for UI elements.
+- **[Notyf](https://www.npmjs.com/package/notyf)**: Lightweight notification system for alerts.
+
+For more details, refer to the `package.json` file in the repository.

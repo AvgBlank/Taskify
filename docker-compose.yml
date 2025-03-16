@@ -1,0 +1,34 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: taskify-db
+    restart: always
+    environment:
+      POSTGRES_USER: taskify_user
+      POSTGRES_PASSWORD: taskify_password
+      POSTGRES_DB: taskify_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  app:
+    build: .
+    container_name: taskify-app
+    restart: always
+    depends_on:
+      - postgres
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_DATABASE_URL: "postgresql://taskify_user:taskify_password@postgres:5432/taskify_db"
+      NEXT_PUBLIC_SESSION_SECRET: "your_random_secret"
+      NEXT_PUBLIC_GOOGLE_CLIENT_ID: "your_google_client_id"
+      NEXT_PUBLIC_GOOGLE_CLIENT_SECRET: "your_google_client_secret"
+      NEXT_PUBLIC_REDIRECT_URI: "http://localhost:3000/api/users/oauth"
+    env_file:
+        - .env
+
+volumes:
+  postgres_data:
+
