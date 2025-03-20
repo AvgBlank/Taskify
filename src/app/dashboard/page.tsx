@@ -334,13 +334,190 @@ const Dashboard = () => {
                   </TableRow>
                 )}
 
+                {/* Only for Completed Tasks */}
                 {properties.map((property) =>
                   tasks
+                    .sort((a, b) => {
+                      return a.title.localeCompare(b.title);
+                    })
                     .filter(
                       (task) =>
-                        (showCompleted
-                          ? task.status === "Completed"
-                          : task.status !== "Completed") &&
+                        (showCompleted ? task.status === "Completed" : false) &&
+                        task.priority === property,
+                    )
+                    .map((task) => (
+                      <TableRow key={task.id}>
+                        {editingTask && editingTask.id === task.id ? (
+                          // Editing mode
+                          <>
+                            <TableCell>
+                              <Input
+                                name="title"
+                                value={editingTask.title}
+                                onChange={handleChange}
+                                placeholder="Task title"
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Select
+                                name="priority"
+                                value={editingTask.priority}
+                                onValueChange={(value) =>
+                                  setEditingTask({
+                                    ...editingTask,
+                                    priority: value,
+                                  })
+                                }
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select priority" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="Low">Low</SelectItem>
+                                  <SelectItem value="Medium">Medium</SelectItem>
+                                  <SelectItem value="High">High</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </TableCell>
+                            <TableCell>
+                              <Select
+                                name="status"
+                                value={editingTask.status}
+                                onValueChange={(value) =>
+                                  setEditingTask({
+                                    ...editingTask,
+                                    status: value,
+                                  })
+                                }
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="Pending">
+                                    Pending
+                                  </SelectItem>
+                                  <SelectItem value="In Progress">
+                                    In Progress
+                                  </SelectItem>
+                                  <SelectItem value="Completed">
+                                    Completed
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </TableCell>
+                            <TableCell>
+                              <Input
+                                name="labels"
+                                value={editingTask.labels.join(" ")}
+                                onChange={handleChange}
+                                placeholder="Add labels (optional)"
+                              />
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Button
+                                onClick={handleSave}
+                                className="mr-2"
+                                size="sm"
+                              >
+                                Save
+                              </Button>
+                              <Button
+                                onClick={() => setEditingTask(null)}
+                                variant="ghost"
+                                size="sm"
+                              >
+                                Cancel
+                              </Button>
+                            </TableCell>
+                          </>
+                        ) : (
+                          // View mode
+                          <>
+                            <TableCell>{task.title}</TableCell>
+                            <TableCell>
+                              <span
+                                className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium border
+                                ${
+                                  task.priority === "High"
+                                    ? "bg-red-100 text-red-700 border-red-800"
+                                    : task.priority === "Medium"
+                                      ? "bg-yellow-100 text-yellow-700 border-yellow-800"
+                                      : "bg-green-100 text-green-700 border-green-800"
+                                }`}
+                              >
+                                {task.priority}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <span
+                                className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium border
+                                ${
+                                  task.status === "Completed"
+                                    ? "bg-green-100 text-green-700 border-green-800"
+                                    : task.status === "In Progress"
+                                      ? "bg-blue-100 text-blue-700 border-blue-800"
+                                      : "bg-gray-100 text-gray-700 border-gray-800"
+                                }`}
+                              >
+                                {task.status}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex gap-1">
+                                {task.labels
+                                  .filter((val) => val && val.name.trim())
+                                  .map((label, index) => (
+                                    <span
+                                      key={index}
+                                      className="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 border border-blue-800"
+                                    >
+                                      {label.name}
+                                    </span>
+                                  ))}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="mr-2"
+                                onClick={() => {
+                                  setEditingTask({
+                                    id: task.id,
+                                    title: task.title,
+                                    priority: task.priority,
+                                    status: task.status,
+                                    labels: task.labels.map((l) => l.name),
+                                  });
+                                  setCreatingTask(null);
+                                }}
+                              >
+                                Edit
+                              </Button>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => DeleteTask(task)}
+                              >
+                                Delete
+                              </Button>
+                            </TableCell>
+                          </>
+                        )}
+                      </TableRow>
+                    )),
+                )}
+
+                {/* Only Tasks that aren't completed */}
+                {properties.map((property) =>
+                  tasks
+                    .sort((a, b) => {
+                      return a.title.localeCompare(b.title);
+                    })
+                    .filter(
+                      (task) =>
+                        task.status !== "Completed" &&
                         task.priority === property,
                     )
                     .map((task) => (
