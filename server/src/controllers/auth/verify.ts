@@ -14,7 +14,7 @@ export default async function verifyHandler(req: Request, res: Response) {
   // Extract token from cookies
   const { SessionToken: token } = req.cookies;
   if (!token) {
-    res.status(401).json({ valid: false });
+    res.status(401).json({ valid: false, err: "TokenNotFound" });
     return;
   }
 
@@ -28,11 +28,11 @@ export default async function verifyHandler(req: Request, res: Response) {
     });
     if (!name) {
       res.clearCookie("SessionToken");
-      res.json({ valid: false });
+      res.status(401).json({ valid: false, err: "User not found" });
       return;
     }
     res.json({ valid: true, userId: payload.Id, name: name?.name });
   } catch {
-    res.status(401).json({ valid: false });
+    res.status(401).json({ valid: false, err: "Invalid token" });
   }
 }

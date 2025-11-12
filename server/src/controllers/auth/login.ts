@@ -41,6 +41,7 @@ export default async function loginHandler(req: Request, res: Response) {
       secure: NODE_ENV === "production",
       sameSite: NODE_ENV === "production" ? "none" : "lax",
       maxAge: 1000 * 60 * 60 * 24 * 365, // 1 year
+      path: "/",
     });
     res.json({ message: "Login successful" });
   } catch (error) {
