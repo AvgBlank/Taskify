@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import checkAuth from "@/lib/IsAuthenticated";
+import { useState, useEffect, useCallback } from "react";
+import checkAuth from "@/lib/isAuthenticated";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -26,10 +26,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { LogOut, Plus } from "lucide-react";
+import { LogOut, Plus, RefreshCw } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Notyf } from "notyf";
 import "notyf/notyf.min.css";
+import apiFetch from "../../lib/apiFetch";
 
 interface Task {
   id: number;
@@ -48,7 +49,6 @@ interface EditingCreatingTask {
 }
 
 const Dashboard = () => {
-  const [userId, setUserId] = useState<string | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [editingTask, setEditingTask] = useState<EditingCreatingTask | null>(
     null,
@@ -59,43 +59,50 @@ const Dashboard = () => {
   const [name, setName] = useState<string>("");
   const [showCompleted, setShowCompleted] = useState<boolean>(false);
   const [notyf, setNotyf] = useState<Notyf | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
   const properties: string[] = ["High", "Medium", "Low"];
 
   useEffect(() => {
     setNotyf(new Notyf());
   }, []);
 
-  useEffect(() => {
-    checkAuth().then((isAuthenticated) => {
-      if (!isAuthenticated[0 as keyof typeof isAuthenticated]) {
-        window.location.href = "/login";
-      } else {
-        setUserId(isAuthenticated[1 as keyof typeof isAuthenticated]);
-        setName(isAuthenticated[2 as keyof typeof isAuthenticated]);
-      }
-    });
-  }, []);
-
-  useEffect(() => {
-    if (userId !== null) {
-      GetTasks(userId).then((data) => {
-        setTasks(data);
-      });
-    }
-  }, [userId]);
-
-  const GetTasks = async (userId: string) => {
-    const response = await fetch(`/api/tasks?userId=${userId}`, {
-      method: "GET",
-    });
+  const GetTasks = useCallback(async () => {
+    setLoading(true);
+    const response = await apiFetch("/api/tasks")
+    const result = await response.json();
 
     if (response.ok) {
-      return await response.json();
+      setLoading(false);
+      return result;
     } else {
-      console.error("Failed to fetch tasks");
-      return [];
+      if (result.err && result.err == "AuthError") {
+        if (notyf) {
+          notyf.error("Session expired. Please log in again.");
+        }
+        setTimeout(() => {
+          window.location.href = "/login";
+        }, 2000);
+      } else {
+        console.error("Failed to fetch tasks");
+        setLoading(false);
+        return [];
+      }
     }
-  };
+  }, [notyf]);
+
+  useEffect(() => {
+    (async () => {
+      const { valid, name } = await checkAuth();
+      if (!valid) {
+        window.location.href = "/login";
+      } else {
+        setName(name);
+        GetTasks().then((data) => {
+          setTasks(data);
+        });
+      }
+    })();
+  }, [GetTasks]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -125,7 +132,7 @@ const Dashboard = () => {
   };
 
   const UpdateTask = async (task: EditingCreatingTask) => {
-    if (task.title === "") {
+    if (task.title.trim() === "") {
       if (notyf) {
         notyf.error("Title is required");
       }
@@ -136,19 +143,34 @@ const Dashboard = () => {
       ...task,
       labels:
         task.labels?.length > 0 ||
-        (task.labels?.length == 1 && task.labels[0] == "")
+          (task.labels?.length == 1 && task.labels[0] == "")
           ? task.labels
           : [],
     };
-    console.log(payload);
-    await fetch(`/api/tasks/${task.id}`, {
+    const response = await apiFetch(`/api/tasks/${task.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    GetTasks(userId!).then(setTasks);
-    return true;
-  };
+    if (!response.ok) {
+      const result = await response.json();
+      if (result.err && result.err == "AuthError") {
+        if (notyf) {
+          notyf.error("Session expired. Please log in again.");
+        }
+        setTimeout(() => {
+          window.location.href = "/login";
+        }, 2000);
+      } else {
+        if (notyf) {
+          notyf.error("Failed to update task");
+        }
+      }
+    } else {
+      GetTasks().then(setTasks);
+      return true
+    }
+  }
 
   const CreateTask = async (task: EditingCreatingTask) => {
     if (task.title.trim() === "") {
@@ -161,33 +183,64 @@ const Dashboard = () => {
     const payload = {
       ...task,
       labels: task.labels?.length > 0 ? task.labels : [],
-      userId,
     };
-    await fetch(`/api/tasks`, {
+    const response = await apiFetch(`/api/tasks`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    GetTasks(userId!).then(setTasks);
-    return true;
+    if (!response.ok) {
+      const result = await response.json();
+      if (result.err && result.err == "AuthError") {
+        if (notyf) {
+          notyf.error("Session expired. Please log in again.");
+        }
+        setTimeout(() => {
+          window.location.href = "/login";
+        }, 2000);
+      } else {
+        if (notyf) {
+          notyf.error("Failed to create task");
+        }
+      }
+    } else {
+      GetTasks().then(setTasks);
+      return true;
+    }
   };
 
   const DeleteTask = async (task: Task) => {
-    await fetch(`/api/tasks/${task.id}`, {
+    const response = await apiFetch(`/api/tasks/${task.id}`, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
     });
-    GetTasks(userId!).then(setTasks);
+    if (!response.ok) {
+      const result = await response.json();
+      if (result.err && result.err == "AuthError") {
+        if (notyf) {
+          notyf.error("Session expired. Please log in again.");
+        }
+        setTimeout(() => {
+          window.location.href = "/login";
+        }, 2000);
+      } else {
+        if (notyf) {
+          notyf.error("Failed to delete task");
+        }
+      }
+    } else {
+      GetTasks().then(setTasks);
+    }
   };
 
   const handleLogout = async () => {
-    await fetch("/api/auth/logout", {
-      method: "POST",
+    await apiFetch("/api/auth/logout", {
+      method: "DELETE",
     });
     window.location.href = "/login";
   };
 
-  if (!userId) {
+  if (loading) {
     return (
       <div className="h-screen w-screen flex items-center justify-center">
         <svg
@@ -226,7 +279,17 @@ const Dashboard = () => {
         </div>
 
         {/* Create Task Button Section */}
-        <div className="flex justify-end">
+        <div className="flex justify-center sm:justify-end gap-2 sm:gap-3">
+          <Button
+            variant="secondary"
+            onClick={() => {
+              GetTasks().then(setTasks);
+            }}
+            className="w-full sm:w-auto"
+          >
+            <RefreshCw className="sm:mr-2" />
+            Refresh Tasks
+          </Button>
           <Button
             onClick={() => {
               setCreatingTask({
@@ -240,7 +303,7 @@ const Dashboard = () => {
             }}
             className="w-full sm:w-auto"
           >
-            <Plus className="mr-2" />
+            <Plus className="sm:mr-2" />
             Create Task
           </Button>
         </div>
@@ -438,13 +501,12 @@ const Dashboard = () => {
                             <TableCell>
                               <span
                                 className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium border
-                                ${
-                                  task.priority === "High"
+                                ${task.priority === "High"
                                     ? "bg-red-100 text-red-700 border-red-800"
                                     : task.priority === "Medium"
                                       ? "bg-yellow-100 text-yellow-700 border-yellow-800"
                                       : "bg-green-100 text-green-700 border-green-800"
-                                }`}
+                                  }`}
                               >
                                 {task.priority}
                               </span>
@@ -452,13 +514,12 @@ const Dashboard = () => {
                             <TableCell>
                               <span
                                 className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium border
-                                ${
-                                  task.status === "Completed"
+                                ${task.status === "Completed"
                                     ? "bg-green-100 text-green-700 border-green-800"
                                     : task.status === "In Progress"
                                       ? "bg-blue-100 text-blue-700 border-blue-800"
                                       : "bg-gray-100 text-gray-700 border-gray-800"
-                                }`}
+                                  }`}
                               >
                                 {task.status}
                               </span>
@@ -613,13 +674,12 @@ const Dashboard = () => {
                             <TableCell>
                               <span
                                 className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium border
-                                ${
-                                  task.priority === "High"
+                                ${task.priority === "High"
                                     ? "bg-red-100 text-red-700 border-red-800"
                                     : task.priority === "Medium"
                                       ? "bg-yellow-100 text-yellow-700 border-yellow-800"
                                       : "bg-green-100 text-green-700 border-green-800"
-                                }`}
+                                  }`}
                               >
                                 {task.priority}
                               </span>
@@ -627,13 +687,12 @@ const Dashboard = () => {
                             <TableCell>
                               <span
                                 className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium border
-                                ${
-                                  task.status === "Completed"
+                                ${task.status === "Completed"
                                     ? "bg-green-100 text-green-700 border-green-800"
                                     : task.status === "In Progress"
                                       ? "bg-blue-100 text-blue-700 border-blue-800"
                                       : "bg-gray-100 text-gray-700 border-gray-800"
-                                }`}
+                                  }`}
                               >
                                 {task.status}
                               </span>

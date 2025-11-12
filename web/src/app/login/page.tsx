@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { FormEvent, useEffect, useState } from "react";
-import checkAuth from "@/lib/IsAuthenticated";
+import checkAuth from "@/lib/isAuthenticated";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,6 +19,7 @@ import { Notyf } from "notyf";
 import "notyf/notyf.min.css";
 import { useTheme } from "next-themes";
 import Link from "next/link";
+import apiFetch from "../../lib/apiFetch";
 
 interface LoginFormData {
   email: string;
@@ -40,20 +41,21 @@ export default function LoginPage() {
   }, []);
 
   useEffect(() => {
-    checkAuth().then((isAuthenticated) => {
-      if (isAuthenticated[0 as keyof typeof isAuthenticated]) {
+    (async () => {
+      const { valid } = await checkAuth();
+      if (valid) {
         window.location.href = "/dashboard";
       } else {
         setLoading(false);
       }
-    });
+    })();
   }, []);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
     try {
-      const response = await fetch("/api/users/login", {
+      const response = await apiFetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

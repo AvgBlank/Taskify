@@ -157,7 +157,7 @@ const Home = () => {
           <div>
             <h1 className="text-lg text-black">Blazing Fast</h1>
             <p className="text-black text-xs pl-1">
-              Built using Next.js, Postegres, and shadcn/ui
+              Built using Next.js, Express.js, Postgres, and shadcn/ui
             </p>
           </div>
         </div>
@@ -238,7 +238,7 @@ const Home = () => {
             <div>
               <h1 className="text-3xl lg:text-4xl text-black">Blazing Fast</h1>
               <p className="text-black text-sm lg:text-md">
-                Built using Next.js, Postegres, and shadcn/ui
+                Built using Next.js, Express.js, Postgres, and shadcn/ui
               </p>
             </div>
           </div>

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { FormEvent, useEffect, useState } from "react";
-import checkAuth from "@/lib/IsAuthenticated";
+import checkAuth from "@/lib/isAuthenticated";
 import { Notyf } from "notyf";
 import "notyf/notyf.min.css";
 import Image from "next/image";
@@ -19,6 +19,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Eye, EyeOff } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
+import apiFetch from "../../lib/apiFetch";
 
 interface RegisterFormData {
   name: string;
@@ -45,14 +46,15 @@ export default function Register() {
   }, []);
 
   useEffect(() => {
-    checkAuth().then((isAuthenticated) => {
-      if (isAuthenticated[0 as keyof typeof isAuthenticated]) {
+    (async () => {
+      const { valid } = await checkAuth();
+      if (valid) {
         window.location.href = "/dashboard";
       } else {
         setLoading(false);
       }
-    });
-  });
+    })();
+  }, []);
 
   const validations = (key: keyof RegisterFormData) => {
     const errors = {
@@ -95,7 +97,7 @@ export default function Register() {
     }
 
     try {
-      const response = await fetch("/api/users/register", {
+      const response = await apiFetch("/api/auth/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
