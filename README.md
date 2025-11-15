@@ -13,11 +13,11 @@ Taskify is built as a monorepo with a fully typed Next.js frontend and an Expres
 
 ## 📌 Live Services
 
-| **Layer** | **Platform** | **Link**                            |
-| --------- | ------------ | ----------------------------------- |
-| Frontend  | Vercel       | https://taskify-beta-ten.vercel.app |
-| Backend   | Render       | https://taskify-c7yg.onrender.com   |
-| Database  | NeonDB       | PostgreSQL hosted on Neon.tech      |
+| **Layer** | **Platform** | **Link**                              |
+| --------- | ------------ | ------------------------------------- |
+| Frontend  | Vercel       | https://taskify-web-rho.vercel.app    |
+| Backend   | Vercel       | https://taskify-server-psi.vercel.app |
+| Database  | NeonDB       | PostgreSQL hosted on Neon.tech        |
 
 ## 📁 Repository Structure
 
@@ -37,7 +37,7 @@ Taskify/
 | **Backend**        | Express.js, TypeScript, Zod, Prisma ORM                             |
 | **Database**       | PostgreSQL (Neon)                                                   |
 | **Authentication** | JWT-based login/signup + Google OAuth integration                   |
-| **Hosting**        | Vercel (frontend), Render (backend), NeonDB (database)              |
+| **Hosting**        | Vercel (frontend), Vercel (backend), NeonDB (database)              |
 
 # 🧩 Architecture Diagram
 
