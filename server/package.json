@@ -1,22 +1,21 @@
 {
   "name": "server",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "dev": "tsx watch src/index.ts",
-    "build": "tsc && tsc-alias",
-    "start": "node dist/index.js",
-    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
-    "db:generate": "prisma generate",
-    "db:migrate:dev": "prisma migrate dev",
-    "db:migrate:deploy": "prisma migrate deploy",
-    "postinstall": "prisma migrate deploy && prisma generate"
-  },
-  "keywords": [],
-  "author": "",
   "license": "ISC",
   "type": "module",
+  "scripts": {
+    "dev": "bun run --hot src/index.ts",
+    "build": "tsc && tsc-alias",
+    "start": "bun run src/index.ts",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
+    "check-types": "tsc --noEmit",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "postinstall": "prisma generate"
+  },
   "dependencies": {
     "@eslint/js": "^9.39.1",
     "@prisma/client": "^6.19.0",
@@ -25,7 +24,6 @@
     "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
-    "dotenv": "^17.2.3",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
     "express": "^5.1.0",
@@ -40,9 +38,8 @@
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
     "@types/jsonwebtoken": "^9.0.10",
-    "@types/node": "^24.10.0",
     "eslint": "^9.39.1",
-    "tsx": "^4.20.6",
     "typescript": "^5.9.3"
-  }
+  },
+  "packageManager": "bun@1.0.0"
 }
