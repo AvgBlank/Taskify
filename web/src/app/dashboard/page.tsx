@@ -26,6 +26,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import { LogOut, Plus, RefreshCw } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Notyf } from "notyf";
@@ -38,6 +46,7 @@ interface Task {
   priority: string;
   status: string;
   labels: { id?: string; name: string }[];
+  createdAt: Date;
 }
 
 interface EditingCreatingTask {
@@ -62,16 +71,23 @@ const Dashboard = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const properties: string[] = ["High", "Medium", "Low"];
 
+  // Pagination
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number | null>(null);
+  const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
+
   useEffect(() => {
     setNotyf(new Notyf());
   }, []);
 
   const GetTasks = useCallback(async () => {
     setLoading(true);
-    const response = await apiFetch("/api/tasks")
+    setCurrentPage(1);
+    const response = await apiFetch("/api/tasks");
     const result = await response.json();
 
     if (response.ok) {
+      setTotalPages(Math.ceil(result.length / 10));
       setLoading(false);
       return result;
     } else {
@@ -84,6 +100,7 @@ const Dashboard = () => {
         }, 2000);
       } else {
         console.error("Failed to fetch tasks");
+        setTotalPages(0);
         setLoading(false);
         return [];
       }
@@ -103,6 +120,23 @@ const Dashboard = () => {
       }
     })();
   }, [GetTasks]);
+
+  useEffect(() => {
+    let filtered;
+
+    if (showCompleted) {
+      filtered = tasks.filter((task) => task.status === "Completed");
+    } else {
+      filtered = tasks.filter((task) => task.status !== "Completed");
+    }
+    setTotalPages(Math.ceil(filtered.length / 10));
+
+    const startIndex = (currentPage - 1) * 10;
+    const endIndex = startIndex + 10;
+    filtered = filtered.slice(startIndex, endIndex);
+
+    setFilteredTasks(filtered);
+  }, [tasks, currentPage, showCompleted]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -143,7 +177,7 @@ const Dashboard = () => {
       ...task,
       labels:
         task.labels?.length > 0 ||
-          (task.labels?.length == 1 && task.labels[0] == "")
+        (task.labels?.length == 1 && task.labels[0] == "")
           ? task.labels
           : [],
     };
@@ -168,9 +202,9 @@ const Dashboard = () => {
       }
     } else {
       GetTasks().then(setTasks);
-      return true
+      return true;
     }
-  }
+  };
 
   const CreateTask = async (task: EditingCreatingTask) => {
     if (task.title.trim() === "") {
@@ -238,6 +272,31 @@ const Dashboard = () => {
       method: "DELETE",
     });
     window.location.href = "/login";
+  };
+
+  const getVisiblePages = (currentPage: number, totalPages: number) => {
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+
+    // Always show first page and last page.
+    const pages = [1];
+
+    // Window around the current page
+    const start = Math.max(2, currentPage - 1);
+    const end = Math.min(totalPages - 1, currentPage + 1);
+
+    if (start > 2) pages.push(0);
+
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+
+    if (end < totalPages - 1) pages.push(0);
+
+    pages.push(totalPages);
+
+    return pages;
   };
 
   if (loading) {
@@ -308,7 +367,6 @@ const Dashboard = () => {
           </Button>
         </div>
 
-        {/* Rest of the Card component */}
         <Card>
           <CardHeader>
             <CardTitle>Tasks</CardTitle>
@@ -318,11 +376,14 @@ const Dashboard = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Priority</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Labels</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="w-[25%]">Title</TableHead>
+                  <TableHead className="w-[10%]">Priority</TableHead>
+                  <TableHead className="w-[10%]">Status</TableHead>
+                  <TableHead className="w-[25%]">Labels</TableHead>
+                  <TableHead className="w-[15%] whitespace-nowrap">
+                    Created At
+                  </TableHead>
+                  <TableHead className="w-[15%] text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -382,6 +443,7 @@ const Dashboard = () => {
                         placeholder="Add labels (optional)"
                       />
                     </TableCell>
+                    <TableCell></TableCell>
                     <TableCell className="text-right">
                       <Button onClick={handleSave} className="mr-2" size="sm">
                         Save
@@ -396,18 +458,9 @@ const Dashboard = () => {
                     </TableCell>
                   </TableRow>
                 )}
-
-                {/* Only for Completed Tasks */}
                 {properties.map((property) =>
-                  tasks
-                    .sort((a, b) => {
-                      return a.title.localeCompare(b.title);
-                    })
-                    .filter(
-                      (task) =>
-                        (showCompleted ? task.status === "Completed" : false) &&
-                        task.priority === property,
-                    )
+                  filteredTasks
+                    .filter((task) => task.priority === property)
                     .map((task) => (
                       <TableRow key={task.id}>
                         {editingTask && editingTask.id === task.id ? (
@@ -477,178 +530,8 @@ const Dashboard = () => {
                                 placeholder="Add labels (optional)"
                               />
                             </TableCell>
-                            <TableCell className="text-right">
-                              <Button
-                                onClick={handleSave}
-                                className="mr-2"
-                                size="sm"
-                              >
-                                Save
-                              </Button>
-                              <Button
-                                onClick={() => setEditingTask(null)}
-                                variant="ghost"
-                                size="sm"
-                              >
-                                Cancel
-                              </Button>
-                            </TableCell>
-                          </>
-                        ) : (
-                          // View mode
-                          <>
-                            <TableCell>{task.title}</TableCell>
                             <TableCell>
-                              <span
-                                className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium border
-                                ${task.priority === "High"
-                                    ? "bg-red-100 text-red-700 border-red-800"
-                                    : task.priority === "Medium"
-                                      ? "bg-yellow-100 text-yellow-700 border-yellow-800"
-                                      : "bg-green-100 text-green-700 border-green-800"
-                                  }`}
-                              >
-                                {task.priority}
-                              </span>
-                            </TableCell>
-                            <TableCell>
-                              <span
-                                className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium border
-                                ${task.status === "Completed"
-                                    ? "bg-green-100 text-green-700 border-green-800"
-                                    : task.status === "In Progress"
-                                      ? "bg-blue-100 text-blue-700 border-blue-800"
-                                      : "bg-gray-100 text-gray-700 border-gray-800"
-                                  }`}
-                              >
-                                {task.status}
-                              </span>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex gap-1">
-                                {task.labels
-                                  .filter((val) => val && val.name.trim())
-                                  .map((label, index) => (
-                                    <span
-                                      key={index}
-                                      className="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 border border-blue-800"
-                                    >
-                                      {label.name}
-                                    </span>
-                                  ))}
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="mr-2"
-                                onClick={() => {
-                                  setEditingTask({
-                                    id: task.id,
-                                    title: task.title,
-                                    priority: task.priority,
-                                    status: task.status,
-                                    labels: task.labels.map((l) => l.name),
-                                  });
-                                  setCreatingTask(null);
-                                }}
-                              >
-                                Edit
-                              </Button>
-                              <Button
-                                variant="destructive"
-                                size="sm"
-                                onClick={() => DeleteTask(task)}
-                              >
-                                Delete
-                              </Button>
-                            </TableCell>
-                          </>
-                        )}
-                      </TableRow>
-                    )),
-                )}
-
-                {/* Only Tasks that aren't completed */}
-                {properties.map((property) =>
-                  tasks
-                    .sort((a, b) => {
-                      return a.title.localeCompare(b.title);
-                    })
-                    .filter(
-                      (task) =>
-                        task.status !== "Completed" &&
-                        task.priority === property,
-                    )
-                    .map((task) => (
-                      <TableRow key={task.id}>
-                        {editingTask && editingTask.id === task.id ? (
-                          // Editing mode
-                          <>
-                            <TableCell>
-                              <Input
-                                name="title"
-                                value={editingTask.title}
-                                onChange={handleChange}
-                                placeholder="Task title"
-                              />
-                            </TableCell>
-                            <TableCell>
-                              <Select
-                                name="priority"
-                                value={editingTask.priority}
-                                onValueChange={(value) =>
-                                  setEditingTask({
-                                    ...editingTask,
-                                    priority: value,
-                                  })
-                                }
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select priority" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="Low">Low</SelectItem>
-                                  <SelectItem value="Medium">Medium</SelectItem>
-                                  <SelectItem value="High">High</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </TableCell>
-                            <TableCell>
-                              <Select
-                                name="status"
-                                value={editingTask.status}
-                                onValueChange={(value) =>
-                                  setEditingTask({
-                                    ...editingTask,
-                                    status: value,
-                                  })
-                                }
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select status" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="Pending">
-                                    Pending
-                                  </SelectItem>
-                                  <SelectItem value="In Progress">
-                                    In Progress
-                                  </SelectItem>
-                                  <SelectItem value="Completed">
-                                    Completed
-                                  </SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </TableCell>
-                            <TableCell>
-                              <Input
-                                name="labels"
-                                value={editingTask.labels.join(" ")}
-                                onChange={handleChange}
-                                placeholder="Add labels (optional)"
-                              />
+                              {new Date(task.createdAt).toLocaleString()}
                             </TableCell>
                             <TableCell className="text-right">
                               <Button
@@ -674,12 +557,13 @@ const Dashboard = () => {
                             <TableCell>
                               <span
                                 className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium border
-                                ${task.priority === "High"
+                                ${
+                                  task.priority === "High"
                                     ? "bg-red-100 text-red-700 border-red-800"
                                     : task.priority === "Medium"
                                       ? "bg-yellow-100 text-yellow-700 border-yellow-800"
                                       : "bg-green-100 text-green-700 border-green-800"
-                                  }`}
+                                }`}
                               >
                                 {task.priority}
                               </span>
@@ -687,12 +571,13 @@ const Dashboard = () => {
                             <TableCell>
                               <span
                                 className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium border
-                                ${task.status === "Completed"
+                                ${
+                                  task.status === "Completed"
                                     ? "bg-green-100 text-green-700 border-green-800"
                                     : task.status === "In Progress"
                                       ? "bg-blue-100 text-blue-700 border-blue-800"
                                       : "bg-gray-100 text-gray-700 border-gray-800"
-                                  }`}
+                                }`}
                               >
                                 {task.status}
                               </span>
@@ -710,6 +595,9 @@ const Dashboard = () => {
                                     </span>
                                   ))}
                               </div>
+                            </TableCell>
+                            <TableCell>
+                              {new Date(task.createdAt).toLocaleString()}
                             </TableCell>
                             <TableCell className="text-right">
                               <Button
@@ -748,12 +636,64 @@ const Dashboard = () => {
         </Card>
       </div>
 
-      <Button
-        variant="outline"
-        onClick={() => setShowCompleted(!showCompleted)}
-      >
-        {showCompleted ? "Hide completed tasks" : "Show completed tasks"}
-      </Button>
+      <div className="w-full flex flex-col sm:flex-row justify-between">
+        <Button
+          variant="outline"
+          onClick={() => setShowCompleted(!showCompleted)}
+        >
+          {showCompleted ? "Hide completed tasks" : "Show completed tasks"}
+        </Button>
+
+        <Pagination className="mx-0 w-auto">
+          <PaginationContent>
+            <PaginationItem aria-disabled={currentPage === 1}>
+              <PaginationPrevious
+                onClick={() =>
+                  currentPage > 1 && setCurrentPage(currentPage - 1)
+                }
+              >
+                Previous
+              </PaginationPrevious>
+            </PaginationItem>
+            <div className="hidden sm:flex">
+              {getVisiblePages(currentPage, totalPages!).map((p, idx) => {
+                if (p === 0) {
+                  return (
+                    <PaginationItem key={`ellipsis-${idx}`}>
+                      <span className="px-2">…</span>
+                    </PaginationItem>
+                  );
+                }
+
+                return (
+                  <PaginationItem key={p}>
+                    <PaginationLink
+                      isActive={currentPage === p}
+                      onClick={() => setCurrentPage(p)}
+                    >
+                      {p}
+                    </PaginationLink>
+                  </PaginationItem>
+                );
+              })}
+            </div>
+            <div className="flex sm:hidden">
+              <PaginationItem>
+                <PaginationLink isActive={true}>{currentPage}</PaginationLink>
+              </PaginationItem>
+            </div>
+            <PaginationItem aria-disabled={currentPage === totalPages}>
+              <PaginationNext
+                onClick={() =>
+                  currentPage < totalPages! && setCurrentPage(currentPage + 1)
+                }
+              >
+                Previous
+              </PaginationNext>
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      </div>
     </div>
   );
 };
