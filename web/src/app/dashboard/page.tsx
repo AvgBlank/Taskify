@@ -69,12 +69,15 @@ const Dashboard = () => {
   const [showCompleted, setShowCompleted] = useState<boolean>(false);
   const [notyf, setNotyf] = useState<Notyf | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const properties: string[] = ["High", "Medium", "Low"];
+  const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
 
-  // Pagination
+  // Pagination, Searching, Sorting and Filtering
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number | null>(null);
-  const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState("All");
+  const [filterPriority, setFilterPriority] = useState("All");
+  const [sortOrder, setSortOrder] = useState("desc");
 
   useEffect(() => {
     setNotyf(new Notyf());
@@ -122,21 +125,48 @@ const Dashboard = () => {
   }, [GetTasks]);
 
   useEffect(() => {
-    let filtered;
+    let data = [...tasks];
 
-    if (showCompleted) {
-      filtered = tasks.filter((task) => task.status === "Completed");
-    } else {
-      filtered = tasks.filter((task) => task.status !== "Completed");
+    if (searchQuery.trim()) {
+      data = data.filter((t) =>
+        t.title.toLowerCase().includes(searchQuery.toLowerCase()),
+      );
     }
-    setTotalPages(Math.ceil(filtered.length / 10));
+    if (filterPriority !== "All") {
+      data = data.filter((t) => t.priority === filterPriority);
+    }
+    if (filterStatus !== "All") {
+      data = data.filter((t) => t.status === filterStatus);
+    }
+    data.sort((a, b) => {
+      if (sortOrder === "asc") {
+        return (
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+      }
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
 
-    const startIndex = (currentPage - 1) * 10;
-    const endIndex = startIndex + 10;
-    filtered = filtered.slice(startIndex, endIndex);
+    const pages = Math.ceil(data.length / 10);
+    setTotalPages(pages);
+    if (currentPage > pages && pages > 0) {
+      setCurrentPage(1);
+      return;
+    }
+    const start = (currentPage - 1) * 10;
+    const end = start + 10;
+    const paginated = data.slice(start, end);
 
-    setFilteredTasks(filtered);
-  }, [tasks, currentPage, showCompleted]);
+    setFilteredTasks(paginated);
+  }, [
+    tasks,
+    currentPage,
+    showCompleted,
+    searchQuery,
+    filterStatus,
+    filterPriority,
+    sortOrder,
+  ]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -338,33 +368,75 @@ const Dashboard = () => {
         </div>
 
         {/* Create Task Button Section */}
-        <div className="flex justify-center sm:justify-end gap-2 sm:gap-3">
-          <Button
-            variant="secondary"
-            onClick={() => {
-              GetTasks().then(setTasks);
-            }}
-            className="w-full sm:w-auto"
-          >
-            <RefreshCw className="sm:mr-2" />
-            Refresh Tasks
-          </Button>
-          <Button
-            onClick={() => {
-              setCreatingTask({
-                id: 0,
-                title: "",
-                priority: "Low",
-                status: "Pending",
-                labels: [],
-              });
-              setEditingTask(null);
-            }}
-            className="w-full sm:w-auto"
-          >
-            <Plus className="sm:mr-2" />
-            Create Task
-          </Button>
+        <div className="flex flex-col lg:flex-row gap-5 justify-between items-center">
+          <div className="grid grid-cols-2 sm:flex gap-2">
+            <Input
+              placeholder="Search tasks..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="max-w-sm"
+            />
+            <Select value={filterPriority} onValueChange={setFilterPriority}>
+              <SelectTrigger className="w-auto">
+                <SelectValue placeholder="Filter Priority" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">Priority</SelectItem>
+                <SelectItem value="Low">Low</SelectItem>
+                <SelectItem value="Medium">Medium</SelectItem>
+                <SelectItem value="High">High</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="w-auto">
+                <SelectValue placeholder="Filter Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">Status</SelectItem>
+                <SelectItem value="Pending">Pending</SelectItem>
+                <SelectItem value="In Progress">In Progress</SelectItem>
+                <SelectItem value="Completed">Completed</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={sortOrder} onValueChange={setSortOrder}>
+              <SelectTrigger className="w-auto">
+                <SelectValue placeholder="Order" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="asc">Ascending</SelectItem>
+                <SelectItem value="desc">Descending</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex-1 flex justify-center sm:justify-end gap-2 sm:gap-3">
+            <Button
+              variant="secondary"
+              onClick={() => {
+                GetTasks().then(setTasks);
+              }}
+              className="w-full sm:w-auto"
+            >
+              <RefreshCw className="sm:mr-2" />
+              Refresh Tasks
+            </Button>
+            <Button
+              onClick={() => {
+                setCreatingTask({
+                  id: 0,
+                  title: "",
+                  priority: "Low",
+                  status: "Pending",
+                  labels: [],
+                });
+                setEditingTask(null);
+              }}
+              className="w-full sm:w-auto"
+            >
+              <Plus className="sm:mr-2" />
+              Create Task
+            </Button>
+          </div>
         </div>
 
         <Card>
@@ -458,105 +530,100 @@ const Dashboard = () => {
                     </TableCell>
                   </TableRow>
                 )}
-                {properties.map((property) =>
-                  filteredTasks
-                    .filter((task) => task.priority === property)
-                    .map((task) => (
-                      <TableRow key={task.id}>
-                        {editingTask && editingTask.id === task.id ? (
-                          // Editing mode
-                          <>
-                            <TableCell>
-                              <Input
-                                name="title"
-                                value={editingTask.title}
-                                onChange={handleChange}
-                                placeholder="Task title"
-                              />
-                            </TableCell>
-                            <TableCell>
-                              <Select
-                                name="priority"
-                                value={editingTask.priority}
-                                onValueChange={(value) =>
-                                  setEditingTask({
-                                    ...editingTask,
-                                    priority: value,
-                                  })
-                                }
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select priority" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="Low">Low</SelectItem>
-                                  <SelectItem value="Medium">Medium</SelectItem>
-                                  <SelectItem value="High">High</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </TableCell>
-                            <TableCell>
-                              <Select
-                                name="status"
-                                value={editingTask.status}
-                                onValueChange={(value) =>
-                                  setEditingTask({
-                                    ...editingTask,
-                                    status: value,
-                                  })
-                                }
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select status" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="Pending">
-                                    Pending
-                                  </SelectItem>
-                                  <SelectItem value="In Progress">
-                                    In Progress
-                                  </SelectItem>
-                                  <SelectItem value="Completed">
-                                    Completed
-                                  </SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </TableCell>
-                            <TableCell>
-                              <Input
-                                name="labels"
-                                value={editingTask.labels.join(" ")}
-                                onChange={handleChange}
-                                placeholder="Add labels (optional)"
-                              />
-                            </TableCell>
-                            <TableCell>
-                              {new Date(task.createdAt).toLocaleString()}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <Button
-                                onClick={handleSave}
-                                className="mr-2"
-                                size="sm"
-                              >
-                                Save
-                              </Button>
-                              <Button
-                                onClick={() => setEditingTask(null)}
-                                variant="ghost"
-                                size="sm"
-                              >
-                                Cancel
-                              </Button>
-                            </TableCell>
-                          </>
-                        ) : (
-                          // View mode
-                          <>
-                            <TableCell>{task.title}</TableCell>
-                            <TableCell>
-                              <span
-                                className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium border
+                {filteredTasks.map((task) => (
+                  <TableRow key={task.id}>
+                    {editingTask && editingTask.id === task.id ? (
+                      // Editing mode
+                      <>
+                        <TableCell>
+                          <Input
+                            name="title"
+                            value={editingTask.title}
+                            onChange={handleChange}
+                            placeholder="Task title"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Select
+                            name="priority"
+                            value={editingTask.priority}
+                            onValueChange={(value) =>
+                              setEditingTask({
+                                ...editingTask,
+                                priority: value,
+                              })
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select priority" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Low">Low</SelectItem>
+                              <SelectItem value="Medium">Medium</SelectItem>
+                              <SelectItem value="High">High</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell>
+                          <Select
+                            name="status"
+                            value={editingTask.status}
+                            onValueChange={(value) =>
+                              setEditingTask({
+                                ...editingTask,
+                                status: value,
+                              })
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Pending">Pending</SelectItem>
+                              <SelectItem value="In Progress">
+                                In Progress
+                              </SelectItem>
+                              <SelectItem value="Completed">
+                                Completed
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            name="labels"
+                            value={editingTask.labels.join(" ")}
+                            onChange={handleChange}
+                            placeholder="Add labels (optional)"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          {new Date(task.createdAt).toLocaleString()}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            onClick={handleSave}
+                            className="mr-2"
+                            size="sm"
+                          >
+                            Save
+                          </Button>
+                          <Button
+                            onClick={() => setEditingTask(null)}
+                            variant="ghost"
+                            size="sm"
+                          >
+                            Cancel
+                          </Button>
+                        </TableCell>
+                      </>
+                    ) : (
+                      // View mode
+                      <>
+                        <TableCell>{task.title}</TableCell>
+                        <TableCell>
+                          <span
+                            className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium border
                                 ${
                                   task.priority === "High"
                                     ? "bg-red-100 text-red-700 border-red-800"
@@ -564,13 +631,13 @@ const Dashboard = () => {
                                       ? "bg-yellow-100 text-yellow-700 border-yellow-800"
                                       : "bg-green-100 text-green-700 border-green-800"
                                 }`}
-                              >
-                                {task.priority}
-                              </span>
-                            </TableCell>
-                            <TableCell>
-                              <span
-                                className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium border
+                          >
+                            {task.priority}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <span
+                            className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium border
                                 ${
                                   task.status === "Completed"
                                     ? "bg-green-100 text-green-700 border-green-800"
@@ -578,58 +645,57 @@ const Dashboard = () => {
                                       ? "bg-blue-100 text-blue-700 border-blue-800"
                                       : "bg-gray-100 text-gray-700 border-gray-800"
                                 }`}
-                              >
-                                {task.status}
-                              </span>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex gap-1">
-                                {task.labels
-                                  .filter((val) => val && val.name.trim())
-                                  .map((label, index) => (
-                                    <span
-                                      key={index}
-                                      className="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 border border-blue-800"
-                                    >
-                                      {label.name}
-                                    </span>
-                                  ))}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              {new Date(task.createdAt).toLocaleString()}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="mr-2"
-                                onClick={() => {
-                                  setEditingTask({
-                                    id: task.id,
-                                    title: task.title,
-                                    priority: task.priority,
-                                    status: task.status,
-                                    labels: task.labels.map((l) => l.name),
-                                  });
-                                  setCreatingTask(null);
-                                }}
-                              >
-                                Edit
-                              </Button>
-                              <Button
-                                variant="destructive"
-                                size="sm"
-                                onClick={() => DeleteTask(task)}
-                              >
-                                Delete
-                              </Button>
-                            </TableCell>
-                          </>
-                        )}
-                      </TableRow>
-                    )),
-                )}
+                          >
+                            {task.status}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-1">
+                            {task.labels
+                              .filter((val) => val && val.name.trim())
+                              .map((label, index) => (
+                                <span
+                                  key={index}
+                                  className="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 border border-blue-800"
+                                >
+                                  {label.name}
+                                </span>
+                              ))}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {new Date(task.createdAt).toLocaleString()}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="mr-2"
+                            onClick={() => {
+                              setEditingTask({
+                                id: task.id,
+                                title: task.title,
+                                priority: task.priority,
+                                status: task.status,
+                                labels: task.labels.map((l) => l.name),
+                              });
+                              setCreatingTask(null);
+                            }}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => DeleteTask(task)}
+                          >
+                            Delete
+                          </Button>
+                        </TableCell>
+                      </>
+                    )}
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           </CardContent>
