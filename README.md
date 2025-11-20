@@ -1,18 +1,18 @@
 # 📝 Taskify — Fast, simple, full‑stack task management
 
 ![Status](https://img.shields.io/badge/status-active-brightgreen)
-![Monorepo](https://img.shields.io/badge/monorepo-TurboRepo-000000?logo=turborepo&logoColor=white)
-![Runtime](https://img.shields.io/badge/runtime-Bun-000000?logo=bun&logoColor=white)
-![Frontend](https://img.shields.io/badge/frontend-Next.js-000000?logo=nextdotjs&logoColor=white)
-![Backend](https://img.shields.io/badge/backend-Express.js-000000?logo=express&logoColor=white)
-![Database](https://img.shields.io/badge/database-PostgreSQL-4169E1?logo=postgresql&logoColor=white)
+![Monorepo](https://img.shields.io/badge/monorepo-TurboRepo-000000?logo=turborepo)
+![Runtime](https://img.shields.io/badge/runtime-Bun-000000?logo=bun)
+![Frontend](https://img.shields.io/badge/frontend-Next.js-000000?logo=nextdotjs)
+![Backend](https://img.shields.io/badge/backend-Express.js-000000?logo=express)
+![Database](https://img.shields.io/badge/database-PostgreSQL-4169E1?logo=postgresql)
 ![ORM](https://img.shields.io/badge/ORM-Prisma-2D3748?logo=prisma)
 ![Auth](https://img.shields.io/badge/auth-JWT-orange)
-![OAuth](https://img.shields.io/badge/OAuth-Google-4285F4?logo=google&logoColor=white)
-![Language](https://img.shields.io/badge/language-TypeScript-3178C6?logo=typescript&logoColor=white)
-![UI](https://img.shields.io/badge/UI-Tailwind_CSS-38B2AC?logo=tailwindcss&logoColor=white)
+![OAuth](https://img.shields.io/badge/OAuth-Google-4285F4?logo=google)
+![Language](https://img.shields.io/badge/language-TypeScript-3178C6?logo=typescript)
+![UI](https://img.shields.io/badge/UI-Tailwind_CSS-38B2AC?logo=tailwindcss)
 ![UI](https://img.shields.io/badge/UI-shadcn%2Fui-000000)
-![Deploy](https://img.shields.io/badge/Deploy-Vercel-000000?logo=vercel&logoColor=white)
+![Deploy](https://img.shields.io/badge/Deploy-Vercel-000000?logo=vercel)
 
 Taskify is a simple and fast task manager built as a Turborepo monorepo. It offers a clean, modern interface where you can easily create, edit, label, and filter tasks. The app stays responsive and reliable behind the scenes, focusing on clarity, speed, and an effortless workflow to help you stay organized.
 
