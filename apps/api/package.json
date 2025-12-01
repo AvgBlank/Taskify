@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start": "bun run src/index.ts",
     "build": "tsc && tsc-alias",
-    "dev": "bun run --hot src/index.ts",
+    "start": "cross-env NODE_ENV=production bun dist/index.js",
+    "dev": "cross-env NODE_ENV=development bun run --hot src/index.ts",
     "clean": "rm -rf dist/ .turbo/",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
@@ -29,12 +29,13 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
-    "@taskify/typescript-config": "workspace:*",
     "@taskify/eslint-config": "workspace:*",
-    "@types/express": "^5.0.5",
+    "@taskify/typescript-config": "workspace:*",
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.5",
     "@types/jsonwebtoken": "^9.0.10",
+    "cross-env": "^10.1.0",
     "typescript": "^5.9.3"
   }
 }

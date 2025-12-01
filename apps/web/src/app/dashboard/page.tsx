@@ -33,11 +33,22 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { LogOut, Plus, RefreshCw } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import "notyf/notyf.min.css";
 import apiFetch from "../../lib/apiFetch";
 import { useNotyf } from "@/hooks/useNotyf";
+import Link from "next/link";
 
 interface Task {
   id: string;
@@ -96,9 +107,10 @@ const Dashboard = () => {
   // Projects
   const [projectsLoading, setProjectsLoading] = useState<boolean>(false);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [createProject, setCreateProject] = useState<CreateProject | boolean>(
-    false,
-  );
+  const [createProject, setCreateProject] = useState<CreateProject>({
+    name: "",
+    description: "",
+  });
 
   const GetProjects = useCallback(async () => {
     setProjectsLoading(true);
@@ -214,6 +226,39 @@ const Dashboard = () => {
     sortOrder,
   ]);
 
+  const handleCreateProject = async (project: CreateProject) => {
+    if (project.name.trim() === "") {
+      if (notyf) {
+        notyf.error("Project name is required");
+      }
+      return false;
+    }
+
+    const response = await apiFetch(`/api/projects`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(project),
+    });
+    if (!response.ok) {
+      const result = await response.json();
+      if (result.err && result.err == "AuthError") {
+        if (notyf) {
+          notyf.error("Session expired. Please log in again.");
+        }
+        setTimeout(() => {
+          window.location.href = "/login";
+        }, 2000);
+      } else {
+        if (notyf) {
+          notyf.error("Failed to create project");
+        }
+      }
+    } else {
+      GetProjects().then(setProjects);
+      return true;
+    }
+  };
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
@@ -244,7 +289,7 @@ const Dashboard = () => {
   const UpdateTask = async (task: EditingCreatingTask) => {
     if (task.title.trim() === "") {
       if (notyf) {
-        notyf.error("Title is required");
+        notyf.error("Task title is required");
       }
       return false;
     }
@@ -285,7 +330,7 @@ const Dashboard = () => {
   const CreateTask = async (task: EditingCreatingTask) => {
     if (task.title.trim() === "") {
       if (notyf) {
-        notyf.error("Title is required");
+        notyf.error("Task title is required");
       }
       return false;
     }
@@ -375,22 +420,6 @@ const Dashboard = () => {
     return pages;
   };
 
-  if (loading || projectsLoading) {
-    return (
-      <div className="h-screen w-screen flex items-center justify-center">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="animate-spin fill-black dark:fill-white"
-          width="32"
-          height="32"
-          viewBox="0 0 256 256"
-        >
-          <path d="M236,128a108,108,0,0,1-216,0c0-42.52,24.73-81.34,63-98.9A12,12,0,1,1,93,50.91C63.24,64.57,44,94.83,44,128a84,84,0,0,0,168,0c0-33.17-19.24-63.43-49-77.09A12,12,0,1,1,173,29.1C211.27,46.66,236,85.48,236,128Z"></path>
-        </svg>
-      </div>
-    );
-  }
-
   return (
     <div className="container mx-auto py-10 space-y-6">
       <div className="flex flex-col space-y-6">
@@ -413,7 +442,6 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Create Task Button Section */}
         <div className="flex flex-col lg:flex-row gap-5 justify-between items-center">
           <div className="grid grid-cols-2 sm:flex gap-2">
             <Input
@@ -454,330 +482,374 @@ const Dashboard = () => {
               </SelectContent>
             </Select>
           </div>
-
-          <div className="flex-1 flex justify-center sm:justify-end gap-2 sm:gap-3">
-            <Button
-              onClick={() => {
-                setCreatingTask({
-                  id: "",
-                  title: "",
-                  priority: "Low",
-                  status: "Pending",
-                  labels: [],
-                });
-                setEditingTask(null);
-              }}
-              className="w-full sm:w-auto"
-            >
-              <Plus className="sm:mr-2" />
-              Create Task
-            </Button>
-          </div>
-          <div className="flex-1 flex justify-center sm:justify-end gap-2 sm:gap-3">
-            <Button
-              onClick={() => {
-                setCreateProject({
-                  name: "",
-                  description: "",
-                });
-              }}
-              className="w-full sm:w-auto"
-            >
-              <Plus className="sm:mr-2" />
-              Create Project
-            </Button>
-          </div>
         </div>
 
-        <Card>
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <div>
-                <CardTitle>Projects</CardTitle>
-                <CardDescription>Manage your projects here.</CardDescription>
-              </div>
-              <Button
-                variant="secondary"
-                onClick={() => {
-                  GetProjects().then(setProjects);
-                }}
-                className="w-full sm:w-auto"
-              >
-                <RefreshCw className="sm:mr-2" />
-                Refresh Projects
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap">
-              {createProject && (
-                <Card className="">
-                  <CardHeader className="mb-2">
-                    <Input
-                      name="name"
-                      value={
-                        typeof createProject === "boolean"
-                          ? ""
-                          : createProject.name
-                      }
-                      onChange={(e) =>
-                        setCreateProject({
-                          ...(typeof createProject === "boolean"
-                            ? {}
-                            : createProject),
-                          name: e.target.value,
-                        } as CreateProject)
-                      }
-                      placeholder="Project Name"
-                    />
-                    <Input
-                      name="description"
-                      value={
-                        typeof createProject === "boolean"
-                          ? ""
-                          : createProject.description || ""
-                      }
-                      onChange={(e) =>
-                        setCreateProject({
-                          ...(typeof createProject === "boolean"
-                            ? {}
-                            : createProject),
-                          description: e.target.value,
-                        } as CreateProject)
-                      }
-                      placeholder="Project Description (optional)"
-                      className="mb-2"
-                    />
-                  </CardHeader>
-                  <div className="w-full flex justify-end">
-                    <Button onClick={handleSave} className="mr-2" size="sm">
-                      Save
-                    </Button>
+        <Card className="w-full">
+          <Dialog>
+            <CardHeader>
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div>
+                  <CardTitle>Projects</CardTitle>
+                  <CardDescription>Manage your projects here.</CardDescription>
+                </div>
+                {!projectsLoading && (
+                  <div className="flex-1 flex flex-col sm:flex-row justify-center sm:justify-end gap-2 sm:gap-3">
                     <Button
-                      onClick={() => setCreatingTask(null)}
-                      variant="ghost"
-                      size="sm"
+                      variant="secondary"
+                      onClick={() => {
+                        GetProjects().then(setProjects);
+                      }}
+                      className="w-full sm:w-auto"
                     >
-                      Cancel
+                      <RefreshCw className="sm:mr-2" />
+                      Refresh Projects
                     </Button>
+                    <DialogTrigger asChild>
+                      <Button
+                        onClick={() => {
+                          setCreateProject({ name: "", description: "" });
+                        }}
+                        className="w-full sm:w-auto"
+                      >
+                        <Plus className="sm:mr-2" />
+                        Create Project
+                      </Button>
+                    </DialogTrigger>
                   </div>
-                </Card>
-              )}
-              {projects?.map((project, idx) => (
-                <Card key={idx}>
-                  <CardHeader className="mb-2">
-                    <CardTitle>{project.name}</CardTitle>
-                    {project.description && (
-                      <CardDescription>{project.description}</CardDescription>
-                    )}
-                  </CardHeader>
-                </Card>
-              ))}
-            </div>
+                )}
+              </div>
+            </CardHeader>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create Project</DialogTitle>
+                <DialogDescription>
+                  Enter the details for your new project. You can edit these
+                  later.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="flex flex-col gap-3">
+                <div className="grid gap-2">
+                  <label htmlFor="name">Project Name</label>
+                  <Input
+                    name="name"
+                    id="name"
+                    value={createProject.name}
+                    onChange={(e) =>
+                      setCreateProject({
+                        ...createProject,
+                        name: e.target.value,
+                      })
+                    }
+                    placeholder="Project Name"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <label htmlFor="description">Project Description</label>
+                  <Input
+                    name="description"
+                    id="description"
+                    value={createProject.description}
+                    onChange={(e) =>
+                      setCreateProject({
+                        ...createProject,
+                        description: e.target.value,
+                      })
+                    }
+                    placeholder="Project Description (optional)"
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button variant="ghost" size="sm">
+                    Cancel
+                  </Button>
+                </DialogClose>
+                <DialogClose asChild>
+                  <Button
+                    onClick={() => handleCreateProject(createProject)}
+                    className="mr-2"
+                    size="sm"
+                  >
+                    Save Project
+                  </Button>
+                </DialogClose>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          <CardContent className="w-full">
+            {projectsLoading ? (
+              <div className="w-full flex items-center justify-center">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="animate-spin fill-black dark:fill-white"
+                  width="32"
+                  height="32"
+                  viewBox="0 0 256 256"
+                >
+                  <path d="M236,128a108,108,0,0,1-216,0c0-42.52,24.73-81.34,63-98.9A12,12,0,1,1,93,50.91C63.24,64.57,44,94.83,44,128a84,84,0,0,0,168,0c0-33.17-19.24-63.43-49-77.09A12,12,0,1,1,173,29.1C211.27,46.66,236,85.48,236,128Z"></path>
+                </svg>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 w-full">
+                {projects?.map((project, idx) => (
+                  <Link key={idx} href={`/projects/${project.id}`}>
+                    <Card className="hover:bg-muted/50">
+                      <CardHeader className="">
+                        <CardTitle className="truncate">
+                          {project.name}
+                        </CardTitle>
+                        <CardDescription className="truncate">
+                          {project.description ?? "‎"}
+                        </CardDescription>
+                      </CardHeader>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
               <div>
                 <CardTitle>Tasks</CardTitle>
                 <CardDescription>
                   Manage and track your tasks here.
                 </CardDescription>
               </div>
-              <Button
-                variant="secondary"
-                onClick={() => {
-                  GetTasks().then(setTasks);
-                }}
-                className="w-full sm:w-auto"
-              >
-                <RefreshCw className="sm:mr-2" />
-                Refresh Tasks
-              </Button>
+              {!loading && (
+                <div className="flex-1 flex flex-col sm:flex-row justify-center sm:justify-end gap-2 sm:gap-3">
+                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      GetTasks().then(setTasks);
+                    }}
+                    className="w-full sm:w-auto"
+                  >
+                    <RefreshCw className="sm:mr-2" />
+                    Refresh Tasks
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setCreatingTask({
+                        id: "",
+                        title: "",
+                        priority: "Low",
+                        status: "Pending",
+                        labels: [],
+                      });
+                      setEditingTask(null);
+                    }}
+                    className="w-full sm:w-auto"
+                  >
+                    <Plus className="sm:mr-2" />
+                    Create Task
+                  </Button>
+                </div>
+              )}
             </div>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[25%]">Title</TableHead>
-                  <TableHead className="w-[10%]">Priority</TableHead>
-                  <TableHead className="w-[10%]">Status</TableHead>
-                  <TableHead className="w-[25%]">Labels</TableHead>
-                  <TableHead className="w-[15%] whitespace-nowrap">
-                    Created At
-                  </TableHead>
-                  <TableHead className="w-[15%] text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {creatingTask && (
+            {loading ? (
+              <div className="w-full flex items-center justify-center">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="animate-spin fill-black dark:fill-white"
+                  width="32"
+                  height="32"
+                  viewBox="0 0 256 256"
+                >
+                  <path d="M236,128a108,108,0,0,1-216,0c0-42.52,24.73-81.34,63-98.9A12,12,0,1,1,93,50.91C63.24,64.57,44,94.83,44,128a84,84,0,0,0,168,0c0-33.17-19.24-63.43-49-77.09A12,12,0,1,1,173,29.1C211.27,46.66,236,85.48,236,128Z"></path>
+                </svg>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell>
-                      <Input
-                        name="title"
-                        value={creatingTask.title}
-                        onChange={handleChange}
-                        placeholder="Task title"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Select
-                        name="priority"
-                        value={creatingTask.priority}
-                        onValueChange={(value) =>
-                          setCreatingTask({ ...creatingTask, priority: value })
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select priority" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Low">Low</SelectItem>
-                          <SelectItem value="Medium">Medium</SelectItem>
-                          <SelectItem value="High">High</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell>
-                      <Select
-                        name="status"
-                        value={creatingTask.status}
-                        onValueChange={(value) =>
-                          setCreatingTask({ ...creatingTask, status: value })
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Pending">Pending</SelectItem>
-                          <SelectItem value="In Progress">
-                            In Progress
-                          </SelectItem>
-                          <SelectItem value="Completed">Completed</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        name="labels"
-                        value={creatingTask.labels.join(" ")}
-                        onChange={handleChange}
-                        placeholder="Add labels (optional)"
-                      />
-                    </TableCell>
-                    <TableCell></TableCell>
-                    <TableCell className="text-right">
-                      <Button onClick={handleSave} className="mr-2" size="sm">
-                        Save
-                      </Button>
-                      <Button
-                        onClick={() => setCreatingTask(null)}
-                        variant="ghost"
-                        size="sm"
-                      >
-                        Cancel
-                      </Button>
-                    </TableCell>
+                    <TableHead className="w-[25%]">Title</TableHead>
+                    <TableHead className="w-[10%]">Priority</TableHead>
+                    <TableHead className="w-[10%]">Status</TableHead>
+                    <TableHead className="w-[25%]">Labels</TableHead>
+                    <TableHead className="w-[15%] whitespace-nowrap">
+                      Created At
+                    </TableHead>
+                    <TableHead className="w-[15%] text-right">
+                      Actions
+                    </TableHead>
                   </TableRow>
-                )}
-                {filteredTasks.map((task) => (
-                  <TableRow key={task.id}>
-                    {editingTask && editingTask.id === task.id ? (
-                      // Editing mode
-                      <>
-                        <TableCell>
-                          <Input
-                            name="title"
-                            value={editingTask.title}
-                            onChange={handleChange}
-                            placeholder="Task title"
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Select
-                            name="priority"
-                            value={editingTask.priority}
-                            onValueChange={(value) =>
-                              setEditingTask({
-                                ...editingTask,
-                                priority: value,
-                              })
-                            }
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select priority" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="Low">Low</SelectItem>
-                              <SelectItem value="Medium">Medium</SelectItem>
-                              <SelectItem value="High">High</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-                        <TableCell>
-                          <Select
-                            name="status"
-                            value={editingTask.status}
-                            onValueChange={(value) =>
-                              setEditingTask({
-                                ...editingTask,
-                                status: value,
-                              })
-                            }
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select status" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="Pending">Pending</SelectItem>
-                              <SelectItem value="In Progress">
-                                In Progress
-                              </SelectItem>
-                              <SelectItem value="Completed">
-                                Completed
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-                        <TableCell>
-                          <Input
-                            name="labels"
-                            value={editingTask.labels.join(" ")}
-                            onChange={handleChange}
-                            placeholder="Add labels (optional)"
-                          />
-                        </TableCell>
-                        <TableCell>
-                          {new Date(task.createdAt).toLocaleString()}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            onClick={handleSave}
-                            className="mr-2"
-                            size="sm"
-                          >
-                            Save
-                          </Button>
-                          <Button
-                            onClick={() => setEditingTask(null)}
-                            variant="ghost"
-                            size="sm"
-                          >
-                            Cancel
-                          </Button>
-                        </TableCell>
-                      </>
-                    ) : (
-                      // View mode
-                      <>
-                        <TableCell>{task.title}</TableCell>
-                        <TableCell>
-                          <span
-                            className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium border
+                </TableHeader>
+                <TableBody>
+                  {creatingTask && (
+                    <TableRow>
+                      <TableCell>
+                        <Input
+                          name="title"
+                          value={creatingTask.title}
+                          onChange={handleChange}
+                          placeholder="Task title"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Select
+                          name="priority"
+                          value={creatingTask.priority}
+                          onValueChange={(value) =>
+                            setCreatingTask({
+                              ...creatingTask,
+                              priority: value,
+                            })
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select priority" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Low">Low</SelectItem>
+                            <SelectItem value="Medium">Medium</SelectItem>
+                            <SelectItem value="High">High</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell>
+                        <Select
+                          name="status"
+                          value={creatingTask.status}
+                          onValueChange={(value) =>
+                            setCreatingTask({ ...creatingTask, status: value })
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Pending">Pending</SelectItem>
+                            <SelectItem value="In Progress">
+                              In Progress
+                            </SelectItem>
+                            <SelectItem value="Completed">Completed</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          name="labels"
+                          value={creatingTask.labels.join(" ")}
+                          onChange={handleChange}
+                          placeholder="Add labels (optional)"
+                        />
+                      </TableCell>
+                      <TableCell></TableCell>
+                      <TableCell className="text-right">
+                        <Button onClick={handleSave} className="mr-2" size="sm">
+                          Save
+                        </Button>
+                        <Button
+                          onClick={() => setCreatingTask(null)}
+                          variant="ghost"
+                          size="sm"
+                        >
+                          Cancel
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {filteredTasks.map((task) => (
+                    <TableRow key={task.id}>
+                      {editingTask && editingTask.id === task.id ? (
+                        // Editing mode
+                        <>
+                          <TableCell>
+                            <Input
+                              name="title"
+                              value={editingTask.title}
+                              onChange={handleChange}
+                              placeholder="Task title"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Select
+                              name="priority"
+                              value={editingTask.priority}
+                              onValueChange={(value) =>
+                                setEditingTask({
+                                  ...editingTask,
+                                  priority: value,
+                                })
+                              }
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select priority" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Low">Low</SelectItem>
+                                <SelectItem value="Medium">Medium</SelectItem>
+                                <SelectItem value="High">High</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell>
+                            <Select
+                              name="status"
+                              value={editingTask.status}
+                              onValueChange={(value) =>
+                                setEditingTask({
+                                  ...editingTask,
+                                  status: value,
+                                })
+                              }
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select status" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Pending">Pending</SelectItem>
+                                <SelectItem value="In Progress">
+                                  In Progress
+                                </SelectItem>
+                                <SelectItem value="Completed">
+                                  Completed
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell>
+                            <Input
+                              name="labels"
+                              value={editingTask.labels.join(" ")}
+                              onChange={handleChange}
+                              placeholder="Add labels (optional)"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            {new Date(task.createdAt).toLocaleString()}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              onClick={handleSave}
+                              className="mr-2"
+                              size="sm"
+                            >
+                              Save
+                            </Button>
+                            <Button
+                              onClick={() => setEditingTask(null)}
+                              variant="ghost"
+                              size="sm"
+                            >
+                              Cancel
+                            </Button>
+                          </TableCell>
+                        </>
+                      ) : (
+                        // View mode
+                        <>
+                          <TableCell>{task.title}</TableCell>
+                          <TableCell>
+                            <span
+                              className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium border
                                 ${
                                   task.priority === "High"
                                     ? "bg-red-100 text-red-700 border-red-800"
@@ -785,13 +857,13 @@ const Dashboard = () => {
                                       ? "bg-yellow-100 text-yellow-700 border-yellow-800"
                                       : "bg-green-100 text-green-700 border-green-800"
                                 }`}
-                          >
-                            {task.priority}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <span
-                            className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium border
+                            >
+                              {task.priority}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <span
+                              className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium border
                                 ${
                                   task.status === "Completed"
                                     ? "bg-green-100 text-green-700 border-green-800"
@@ -799,59 +871,60 @@ const Dashboard = () => {
                                       ? "bg-blue-100 text-blue-700 border-blue-800"
                                       : "bg-gray-100 text-gray-700 border-gray-800"
                                 }`}
-                          >
-                            {task.status}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-1">
-                            {task.labels
-                              .filter((val) => val && val.name.trim())
-                              .map((label, index) => (
-                                <span
-                                  key={index}
-                                  className="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 border border-blue-800"
-                                >
-                                  {label.name}
-                                </span>
-                              ))}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {new Date(task.createdAt).toLocaleString()}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="mr-2"
-                            onClick={() => {
-                              setEditingTask({
-                                id: task.id,
-                                title: task.title,
-                                priority: task.priority,
-                                status: task.status,
-                                labels: task.labels.map((l) => l.name),
-                              });
-                              setCreatingTask(null);
-                            }}
-                          >
-                            Edit
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => DeleteTask(task)}
-                          >
-                            Delete
-                          </Button>
-                        </TableCell>
-                      </>
-                    )}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                            >
+                              {task.status}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-1">
+                              {task.labels
+                                .filter((val) => val && val.name.trim())
+                                .map((label, index) => (
+                                  <span
+                                    key={index}
+                                    className="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 border border-blue-800"
+                                  >
+                                    {label.name}
+                                  </span>
+                                ))}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {new Date(task.createdAt).toLocaleString()}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="mr-2"
+                              onClick={() => {
+                                setEditingTask({
+                                  id: task.id,
+                                  title: task.title,
+                                  priority: task.priority,
+                                  status: task.status,
+                                  labels: task.labels.map((l) => l.name),
+                                });
+                                setCreatingTask(null);
+                              }}
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => DeleteTask(task)}
+                            >
+                              Delete
+                            </Button>
+                          </TableCell>
+                        </>
+                      )}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
       </div>

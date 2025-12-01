@@ -2,14 +2,10 @@
   "$schema": "https://turborepo.com/schema.json",
   "ui": "tui",
   "tasks": {
-    "start": {
-      "dependsOn": ["build", "^start"],
-      "persistent": true,
-      "cache": false
-    },
     "build": {
       "dependsOn": ["^build"],
       "env": [
+        "NODE_ENV",
         "PORT",
         "APP_ORIGIN",
         "DATABASE_URL",
@@ -24,6 +20,11 @@
       ],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": ["dist/**", "public/**", ".next/**", "!.next/cache/**", ".vercel/output/**"]
+    },
+    "start": {
+      "dependsOn": ["build", "^start"],
+      "persistent": true,
+      "cache": false
     },
     "dev": {
       "dependsOn": ["^dev"],
