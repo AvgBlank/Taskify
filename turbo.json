@@ -53,14 +53,18 @@
     },
     "db:generate": {
       "dependsOn": ["^db:generate"],
+      "persistent": true,
       "cache": false
     },
     "db:migrate:dev": {
       "dependsOn": ["^db:migrate:dev"],
+      "interactive": true,
+      "persistent": true,
       "cache": false
     },
     "db:migrate:deploy": {
       "dependsOn": ["^db:migrate:deploy"],
+      "persistent": true,
       "cache": false
     }
   }

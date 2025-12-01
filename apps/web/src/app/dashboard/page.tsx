@@ -40,23 +40,38 @@ import apiFetch from "../../lib/apiFetch";
 import { useNotyf } from "@/hooks/useNotyf";
 
 interface Task {
-  id: number;
+  id: string;
   title: string;
   priority: string;
   status: string;
   labels: { id?: string; name: string }[];
   createdAt: Date;
+  updatedAt: Date;
 }
 
 interface EditingCreatingTask {
-  id: number;
+  id: string;
   title: string;
   priority: string;
   status: string;
   labels: string[];
 }
 
+interface Project {
+  id: string;
+  name: string;
+  description?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface CreateProject {
+  name: string;
+  description?: string;
+}
+
 const Dashboard = () => {
+  // Tasks
   const [tasks, setTasks] = useState<Task[]>([]);
   const [editingTask, setEditingTask] = useState<EditingCreatingTask | null>(
     null,
@@ -77,6 +92,37 @@ const Dashboard = () => {
   const [filterStatus, setFilterStatus] = useState("All");
   const [filterPriority, setFilterPriority] = useState("All");
   const [sortOrder, setSortOrder] = useState("desc");
+
+  // Projects
+  const [projectsLoading, setProjectsLoading] = useState<boolean>(false);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [createProject, setCreateProject] = useState<CreateProject | boolean>(
+    false,
+  );
+
+  const GetProjects = useCallback(async () => {
+    setProjectsLoading(true);
+    const response = await apiFetch("/api/projects");
+    const result = await response.json();
+
+    if (response.ok) {
+      setProjectsLoading(false);
+      return result;
+    } else {
+      if (result.err && result.err == "AuthError") {
+        if (notyf) {
+          notyf.error("Session expired. Please log in again.");
+        }
+        setTimeout(() => {
+          window.location.href = "/login";
+        }, 2000);
+      } else {
+        console.error("Failed to fetch tasks");
+        setProjectsLoading(false);
+        return [];
+      }
+    }
+  }, [notyf]);
 
   const GetTasks = useCallback(async () => {
     setLoading(true);
@@ -115,9 +161,12 @@ const Dashboard = () => {
         GetTasks().then((data) => {
           setTasks(data);
         });
+        GetProjects().then((data) => {
+          setProjects(data);
+        });
       }
     })();
-  }, [GetTasks]);
+  }, [GetTasks, GetProjects]);
 
   useEffect(() => {
     let data = [...tasks];
@@ -326,7 +375,7 @@ const Dashboard = () => {
     return pages;
   };
 
-  if (loading) {
+  if (loading || projectsLoading) {
     return (
       <div className="h-screen w-screen flex items-center justify-center">
         <svg
@@ -408,19 +457,9 @@ const Dashboard = () => {
 
           <div className="flex-1 flex justify-center sm:justify-end gap-2 sm:gap-3">
             <Button
-              variant="secondary"
-              onClick={() => {
-                GetTasks().then(setTasks);
-              }}
-              className="w-full sm:w-auto"
-            >
-              <RefreshCw className="sm:mr-2" />
-              Refresh Tasks
-            </Button>
-            <Button
               onClick={() => {
                 setCreatingTask({
-                  id: 0,
+                  id: "",
                   title: "",
                   priority: "Low",
                   status: "Pending",
@@ -434,12 +473,130 @@ const Dashboard = () => {
               Create Task
             </Button>
           </div>
+          <div className="flex-1 flex justify-center sm:justify-end gap-2 sm:gap-3">
+            <Button
+              onClick={() => {
+                setCreateProject({
+                  name: "",
+                  description: "",
+                });
+              }}
+              className="w-full sm:w-auto"
+            >
+              <Plus className="sm:mr-2" />
+              Create Project
+            </Button>
+          </div>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Tasks</CardTitle>
-            <CardDescription>Manage and track your tasks here.</CardDescription>
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle>Projects</CardTitle>
+                <CardDescription>Manage your projects here.</CardDescription>
+              </div>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  GetProjects().then(setProjects);
+                }}
+                className="w-full sm:w-auto"
+              >
+                <RefreshCw className="sm:mr-2" />
+                Refresh Projects
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap">
+              {createProject && (
+                <Card className="">
+                  <CardHeader className="mb-2">
+                    <Input
+                      name="name"
+                      value={
+                        typeof createProject === "boolean"
+                          ? ""
+                          : createProject.name
+                      }
+                      onChange={(e) =>
+                        setCreateProject({
+                          ...(typeof createProject === "boolean"
+                            ? {}
+                            : createProject),
+                          name: e.target.value,
+                        } as CreateProject)
+                      }
+                      placeholder="Project Name"
+                    />
+                    <Input
+                      name="description"
+                      value={
+                        typeof createProject === "boolean"
+                          ? ""
+                          : createProject.description || ""
+                      }
+                      onChange={(e) =>
+                        setCreateProject({
+                          ...(typeof createProject === "boolean"
+                            ? {}
+                            : createProject),
+                          description: e.target.value,
+                        } as CreateProject)
+                      }
+                      placeholder="Project Description (optional)"
+                      className="mb-2"
+                    />
+                  </CardHeader>
+                  <div className="w-full flex justify-end">
+                    <Button onClick={handleSave} className="mr-2" size="sm">
+                      Save
+                    </Button>
+                    <Button
+                      onClick={() => setCreatingTask(null)}
+                      variant="ghost"
+                      size="sm"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </Card>
+              )}
+              {projects?.map((project, idx) => (
+                <Card key={idx}>
+                  <CardHeader className="mb-2">
+                    <CardTitle>{project.name}</CardTitle>
+                    {project.description && (
+                      <CardDescription>{project.description}</CardDescription>
+                    )}
+                  </CardHeader>
+                </Card>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle>Tasks</CardTitle>
+                <CardDescription>
+                  Manage and track your tasks here.
+                </CardDescription>
+              </div>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  GetTasks().then(setTasks);
+                }}
+                className="w-full sm:w-auto"
+              >
+                <RefreshCw className="sm:mr-2" />
+                Refresh Tasks
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <Table>

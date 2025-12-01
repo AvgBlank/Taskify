@@ -12,22 +12,46 @@ model User {
     name     String
     email    String  @unique
     password String?
+
     tasks    Task[]
+    projects Project[]
+}
+
+model Project {
+    id          String  @id @default(uuid())
+    name        String
+    description String?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    User   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId String
+
+    tasks Task[]
 }
 
 model Task {
-    id        String   @id @default(uuid())
-    title     String
-    priority  String
-    status    String
+    id       String @id @default(uuid())
+    title    String
+    priority String
+    status   String
+
     createdAt DateTime @default(now())
-    userId    String
-    user      User     @relation(fields: [userId], references: [id])
-    labels    Label[]  @relation("TaskLabels")
+    updatedAt DateTime @updatedAt
+
+    userId String
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    Project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+    projectId String?
+
+    labels Label[] @relation("TaskLabels")
 }
 
 model Label {
-    id    String @id @default(uuid())
-    name  String @unique
+    id   String @id @default(uuid())
+    name String @unique
+
     tasks Task[] @relation("TaskLabels")
 }
