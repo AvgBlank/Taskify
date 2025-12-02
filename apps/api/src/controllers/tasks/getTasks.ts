@@ -14,7 +14,6 @@ export default async function getTasksHandler(
     }
 
     const { searchQuery, status, priority, skip, order } = req.query;
-    console.log(req.query);
 
     const tasks = await prisma.task.findMany({
       where: {
