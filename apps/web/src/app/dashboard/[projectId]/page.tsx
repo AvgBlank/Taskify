@@ -88,6 +88,7 @@ const Project = () => {
   // Pagination, Searching, Sorting and Filtering
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number | null>(null);
+  const [totalTasks, setTotalTasks] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("All");
   const [filterPriority, setFilterPriority] = useState("All");
@@ -123,6 +124,10 @@ const Project = () => {
         setTotalPages(result[1]);
         setLoading(false);
         setTasks(result[0]);
+        setTotalTasks(result[2]);
+        if (result[2] <= 10) {
+          setCurrentPage(1);
+        }
       } else {
         if (result.err && result.err == "AuthError") {
           if (notyf) {
@@ -136,6 +141,8 @@ const Project = () => {
           setTotalPages(0);
           setLoading(false);
           setTasks([]);
+          setTotalTasks(0);
+          setCurrentPage(1);
         }
       }
     },
@@ -557,9 +564,12 @@ const Project = () => {
         {/* </div> */}
         <Card>
           <CardHeader>
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-              <div>
-                <CardTitle>{project.name}</CardTitle>
+            <div className="w-full flex flex-col sm:flex-row justify-between items-center gap-4">
+              <div className="w-full">
+                <div className="w-full flex justify-between">
+                  <CardTitle>{project.name}</CardTitle>
+                  <CardTitle>Total Filtered Tasks: {totalTasks}</CardTitle>
+                </div>
                 <CardDescription>{project.description}</CardDescription>
               </div>
             </div>

@@ -32,12 +32,13 @@ export default async function getTasksHandler(
     });
 
     const pages = Math.ceil(tasks.length / 10);
+    const totalTasks = tasks.length;
     const final = tasks.slice(
       parseInt(skip as string) || 0,
       (parseInt(skip as string) || 0) + 10,
     );
 
-    return res.json([final, pages]);
+    return res.json([final, pages, totalTasks]);
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Internal Server Error" });
