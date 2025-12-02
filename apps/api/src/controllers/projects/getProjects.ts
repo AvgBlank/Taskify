@@ -11,9 +11,14 @@ export default async function getProjectsHandler(
     if (!userId) {
       return res.status(401).json({ error: "Unauthorized" });
     }
+    const { searchQuery } = req.query;
+    console.log("Search Query: ", searchQuery);
 
     const projects = await prisma.project.findMany({
-      where: { userId },
+      where: {
+        userId: userId,
+        name: { contains: searchQuery as string, mode: "insensitive" },
+      },
       orderBy: {
         createdAt: "desc",
       },

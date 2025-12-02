@@ -1,24 +1,23 @@
 import { Request, Response } from "express";
 import prisma from "@/lib/db";
 
-export default async function getProjectDetailsHandler(
+export default async function getProjectsHandler(
   req: Request<{ projectId: string }>,
   res: Response,
 ) {
-  try {
-    const { projectId } = req.params;
-    if (!projectId) {
-      return res.status(400).json({ error: "Project Id is required" });
-    }
+  const { projectId } = req.params;
 
-    const projects = await prisma.project.findMany({
-      where: { id: projectId },
-      include: {
-        tasks: true,
+  try {
+    const projects = await prisma.project.findUnique({
+      where: {
+        id: projectId,
       },
     });
 
-    return res.json(projects);
+    if (!projects) {
+      return res.status(404).json({ error: "Project not found" });
+    }
+    return res.json({ name: projects.name, description: projects.description });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Internal Server Error" });

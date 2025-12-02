@@ -11,7 +11,7 @@ export default async function createTaskHandler(
     return res.status(401).json({ error: "Unauthorized" });
   }
 
-  const { title, priority, status, labels } = req.body;
+  const { title, priority, status, labels, projectId } = req.body;
   try {
     const newTask = await prisma.task.create({
       data: {
@@ -19,6 +19,7 @@ export default async function createTaskHandler(
         priority,
         status,
         userId,
+        projectId,
         labels: labels?.length
           ? {
               connectOrCreate: labels.map((label: string) => ({
