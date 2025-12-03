@@ -1,10 +1,10 @@
-# 📝 Taskify — Fast, simple, full‑stack task management
+# 📝 Taskify — Fast, simple, full-stack task management
 
 ![Status](https://img.shields.io/badge/status-active-brightgreen)
 ![Monorepo](https://img.shields.io/badge/monorepo-TurboRepo-000000?logo=turborepo)
 ![Runtime](https://img.shields.io/badge/runtime-Bun-000000?logo=bun)
-![Frontend](https://img.shields.io/badge/frontend-Next.js-000000?logo=nextdotjs)
-![Backend](https://img.shields.io/badge/backend-Express.js-000000?logo=express)
+![Frontend](https://img.shields.io/badge/frontend-Next.js_16-000000?logo=nextdotjs)
+![Backend](https://img.shields.io/badge/backend-Express.js_5-000000?logo=express)
 ![Database](https://img.shields.io/badge/database-PostgreSQL-4169E1?logo=postgresql)
 ![ORM](https://img.shields.io/badge/ORM-Prisma-2D3748?logo=prisma)
 ![Auth](https://img.shields.io/badge/auth-JWT-orange)
@@ -14,26 +14,38 @@
 ![UI](https://img.shields.io/badge/UI-shadcn%2Fui-000000)
 ![Deploy](https://img.shields.io/badge/Deploy-Vercel-000000?logo=vercel)
 
-Taskify is a simple and fast task manager built as a Turborepo monorepo. It offers a clean, modern interface where you can easily create, edit, label, and filter tasks. The app stays responsive and reliable behind the scenes, focusing on clarity, speed, and an effortless workflow to help you stay organized.
+Taskify is a fast, open-source task management application built as a Turborepo monorepo. It provides an intuitive dashboard where you can organize your work through projects and tasks, with support for labels, priorities, statuses, and filtering. With Google OAuth integration, secure JWT-based sessions, and a responsive modern UI built with Next.js and Tailwind CSS, Taskify makes managing your daily tasks effortless and enjoyable.
 
 ## Table of Contents
 
-- [Live Services](#live-services)
-- [Repository Structure](#repository-structure)
-- [Tech Stack](#tech-stack)
-- [High-Level Architecture](#high-level-architecture)
-- [Features](#features)
-- [API Endpoints](#api-endpoints)
-- [Installation (Local Development)](#installation-local-development)
-  - [Prerequisites](#prerequisites)
-  - [1) Clone and install](#1-clone-and-install)
-  - [2) Environment variables](#2-environment-variables)
-  - [3) Database and Prisma](#3-database-and-prisma)
-  - [4) Start development](#4-start-development)
-- [Usage Guide](#usage-guide)
-  - [Web app](#web-app)
-  - [Monorepo scripts (root)](#monorepo-scripts-root)
-- [Authors](#authors)
+- [📝 Taskify — Fast, simple, full-stack task management](#-taskify--fast-simple-full-stack-task-management)
+  - [Table of Contents](#table-of-contents)
+  - [📌 Live Services](#-live-services)
+  - [📁 Repository Structure](#-repository-structure)
+  - [🛠 Tech Stack](#-tech-stack)
+    - [Languages \& Frameworks](#languages--frameworks)
+    - [Libraries \& Tools](#libraries--tools)
+  - [🧩 High-Level Architecture](#-high-level-architecture)
+  - [🚀 Features](#-features)
+    - [Authentication](#authentication)
+    - [Project Management](#project-management)
+    - [Task Management](#task-management)
+    - [Dashboard UX](#dashboard-ux)
+    - [Developer Experience](#developer-experience)
+  - [📡 API Endpoints](#-api-endpoints)
+    - [Authentication Routes](#authentication-routes)
+    - [Project Routes](#project-routes)
+    - [Task Routes](#task-routes)
+  - [⚙️ Installation (Local Development)](#️-installation-local-development)
+    - [Prerequisites](#prerequisites)
+    - [1) Clone and install](#1-clone-and-install)
+    - [2) Environment variables](#2-environment-variables)
+    - [3) Database and Prisma](#3-database-and-prisma)
+    - [4) Start development](#4-start-development)
+  - [🧪 Usage Guide](#-usage-guide)
+    - [Web app](#web-app)
+    - [Monorepo scripts (root)](#monorepo-scripts-root)
+  - [👥 Authors](#-authors)
 
 <a id="live-services"></a>
 
@@ -51,34 +63,43 @@ Taskify is a simple and fast task manager built as a Turborepo monorepo. It offe
 ```
 Taskify/
 ├─ apps/
-│  ├─ api/                     # Backend: Express + Prisma + Zod
+│  ├─ api/                        # Backend: Express + Prisma + Zod
 │  │  ├─ src/
-│  │  │  ├─ app.ts             # Express app wiring (CORS, cookies, routes)
-│  │  │  ├─ index.ts           # Bootstraps server (PORT from env)
-│  │  │  ├─ constants/env.ts   # Zod-validated environment variables
+│  │  │  ├─ app.ts                # Express app wiring (CORS, cookies, routes)
+│  │  │  ├─ index.ts              # Bootstraps server (PORT from env)
+│  │  │  ├─ constants/env.ts      # Zod-validated environment variables
 │  │  │  ├─ controllers/
-│  │  │  │  ├─ auth/           # register, login, logout, oauth, verify
-│  │  │  │  └─ tasks/          # getTasks, createTask, updateTask, deleteTask
-│  │  │  ├─ lib/db.ts          # PrismaClient singleton
-│  │  │  ├─ middlewares/       # authenticate (JWT via cookie)
-│  │  │  └─ routes/            # /api/auth, /api/tasks
-│  │  ├─ prisma/schema.prisma  # PostgreSQL models: User, Task, Label (M2M)
-│  │  ├─ .env.sample           # API environment variables
+│  │  │  │  ├─ auth/              # register, login, logout, oauth, verify
+│  │  │  │  ├─ projects/          # getProjects, getProjectDetails, createProject, updateProject, deleteProject
+│  │  │  │  └─ tasks/             # getTasks, createTask, updateTask, deleteTask
+│  │  │  ├─ lib/db.ts             # PrismaClient singleton
+│  │  │  ├─ middlewares/          # authenticate (JWT via cookie)
+│  │  │  └─ routes/               # /api/auth, /api/tasks, /api/projects
+│  │  ├─ prisma/
+│  │  │  ├─ schema.prisma         # PostgreSQL models: User, Project, Task, Label
+│  │  │  └─ migrations/           # Database migrations
 │  │  └─ vercel.json
-│  └─ web/                     # Frontend: Next.js + Tailwind + shadcn/ui
+│  └─ web/                        # Frontend: Next.js + Tailwind + shadcn/ui
 │     ├─ src/
-│     │  ├─ app/               # App Router pages (landing, auth, dashboard)
-│     │  ├─ components/        # UI primitives and providers
-│     │  ├─ hooks/             # Notyf hook
-│     │  └─ lib/               # apiFetch, auth helpers, utils
+│     │  ├─ app/                  # App Router pages (landing, auth, dashboard, projects)
+│     │  │  ├─ page.tsx           # Landing page
+│     │  │  ├─ login/             # Login page
+│     │  │  ├─ register/          # Registration page
+│     │  │  ├─ auth/callback/     # OAuth callback handler
+│     │  │  └─ dashboard/         # Dashboard and project views
+│     │  │     └─ [projectId]/    # Dynamic project task management
+│     │  ├─ components/           # UI primitives and providers
+│     │  │  ├─ ui/                # shadcn/ui components (button, card, dialog, input, etc.)
+│     │  │  └─ providers/         # Theme provider
+│     │  ├─ hooks/                # Custom hooks (useNotyf)
+│     │  └─ lib/                  # apiFetch, auth helpers, utils
 │     ├─ styles/globals.css
-│     ├─ .env.sample           # Web environment variables
 │     └─ vercel.json
 ├─ packages/
-│  ├─ eslint-config/           # Shared ESLint configs
-│  └─ typescript-config/       # Shared tsconfig base
-├─ turbo.json                   # Turborepo pipeline (env passthrough)
-├─ package.json                 # Monorepo scripts (Bun)
+│  ├─ eslint-config/              # Shared ESLint configs
+│  └─ typescript-config/          # Shared tsconfig base
+├─ turbo.json                     # Turborepo pipeline (env passthrough)
+├─ package.json                   # Monorepo scripts (Bun)
 └─ bun.lock
 ```
 
@@ -86,53 +107,94 @@ Taskify/
 
 ## 🛠 Tech Stack
 
-- Frontend: Next.js 15, React 19, Tailwind CSS, shadcn/ui, Radix UI, Lucide Icons, next-themes, Notyf
-- Backend: Express.js 5, TypeScript, Zod (env validation), CORS, cookie-parser, bcryptjs, jsonwebtoken
-- ORM/DB: Prisma, PostgreSQL
-- Auth: JWT (httpOnly cookie-based sessions), Google OAuth (authorization code)
-- Tooling/Infra: Turborepo, Bun, ESLint, Prettier, Vercel (web + api)
+### Languages & Frameworks
+
+- **Frontend:** Next.js 16, React 19, TypeScript
+- **Backend:** Express.js 5, TypeScript
+- **Database:** PostgreSQL
+- **ORM:** Prisma
+
+### Libraries & Tools
+
+- **UI:** Tailwind CSS, shadcn/ui, Radix UI (Dialog, Dropdown Menu, Select, Slot), Lucide Icons
+- **Theming:** next-themes
+- **Notifications:** Notyf
+- **Styling Utilities:** clsx, tailwind-merge, class-variance-authority, tailwindcss-animate
+- **Authentication:** jsonwebtoken (JWT), bcryptjs, Google OAuth 2.0
+- **Validation:** Zod (env validation)
+- **HTTP:** cors, cookie-parser
+- **Tooling/Infra:** Turborepo, Bun, ESLint, Prettier, PostCSS
+- **Deployment:** Vercel (web + api)
 
 <a id="high-level-architecture"></a>
 
 ## 🧩 High-Level Architecture
 
 ```
-   ┌─────────────┐          ┌───────────────────────┐           ┌─────────────────┐
-   │   Next.js   │  fetch   │   Express API (Bun)   │  Prisma   │  PostgreSQL     │
-   │   (Web)     ├─────────>│   /api/auth, /api/... ├──────────>│  (Tasks, Labels │
-   │             │ cookies  │   JWT via cookies     │           │  Users)         │
-   └─────────────┘          └───────────────────────┘           └─────────────────┘
-                       ^                |
-                       |                |
-                 Google OAuth 2.0 <─────┘ (code exchange → JWT session)
+   ┌─────────────────┐          ┌───────────────────────┐           ┌─────────────────┐
+   │   Next.js 16    │  fetch   │   Express API (Bun)   │  Prisma   │   PostgreSQL    │
+   │   (Web)         ├─────────>│   /api/auth           ├──────────>│   (Users,       │
+   │                 │ cookies  │   /api/projects       │           │    Projects,    │
+   │   Turbopack     │          │   /api/tasks          │           │    Tasks,       │
+   └─────────────────┘          │   JWT via cookies     │           │    Labels)      │
+                                └───────────────────────┘           └─────────────────┘
+                           ^                |
+                           |                |
+                     Google OAuth 2.0 <─────┘ (code exchange → JWT session)
 ```
 
-- Sessions: JWT stored in `httpOnly` cookie `SessionToken` (1y expiry; `secure` + `sameSite` tuned by `NODE_ENV`)
-- CORS: Restricted to `APP_ORIGIN` with credentials enabled
-- Labels: Many-to-many between `Task` and `Label` (connect or create on write)
+**Key Architecture Details:**
+
+- **Sessions:** JWT stored in `httpOnly` cookie `SessionToken` (1 year expiry; `secure` + `sameSite` tuned by `NODE_ENV`)
+- **CORS:** Restricted to `APP_ORIGIN` with credentials enabled
+- **Labels:** Many-to-many relationship between `Task` and `Label` (connect or create on write)
+- **Projects:** Users can organize tasks into projects with cascading deletes
+- **Database Relations:** User → Projects → Tasks with proper cascade deletion
 
 <a id="features"></a>
 
 ## 🚀 Features
 
-- Authentication
-  - Email + password (bcrypt)
-  - Google OAuth (authorization code flow)
-  - Session via `httpOnly` JWT cookie
-- Task Management
-  - Create, Read, Update, Delete
-  - Labels (connect or create)
-  - Created-at ordering
-- Dashboard UX
-  - Search, filter by priority/status, sort by date, pagination
-  - Toast notifications (Notyf)
-  - Dark/light theme (next-themes)
-  - Responsive UI with shadcn/ui + Tailwind
-- Developer Experience
-  - Zod-validated runtime config
-  - Turborepo-managed monorepo
-  - Shared ESLint and TS configs
-  - Bun for fast install and dev
+### Authentication
+
+- Email + password registration and login (bcrypt hashing)
+- Google OAuth (authorization code flow)
+- Session management via `httpOnly` JWT cookie
+- Session verification endpoint
+
+### Project Management
+
+- Create, Read, Update, Delete projects
+- Project descriptions (optional)
+- Search projects by name
+- Cascading delete (deletes all associated tasks)
+
+### Task Management
+
+- Create, Read, Update, Delete tasks
+- Priority levels (customizable)
+- Status tracking (customizable)
+- Labels (connect existing or create new, many-to-many)
+- Tasks organized within projects
+
+### Dashboard UX
+
+- Search tasks and projects
+- Filter by priority and status
+- Sort by date (ascending/descending)
+- Pagination for large task lists
+- Toggle to show/hide completed tasks
+- Toast notifications (Notyf)
+- Dark/light theme toggle (next-themes)
+- Responsive design with shadcn/ui + Tailwind CSS
+
+### Developer Experience
+
+- Zod-validated runtime configuration
+- Turborepo-managed monorepo
+- Shared ESLint and TypeScript configs
+- Bun for fast install and development
+- Hot reload with `--hot` flag
 
 <a id="api-endpoints"></a>
 
@@ -141,18 +203,35 @@ Taskify/
 Base URL (local): `http://localhost:8080`  
 All authenticated routes require a valid `SessionToken` cookie.
 
-| Endpoint             | Method | Description                                   | Access                                 |
-| -------------------- | ------ | --------------------------------------------- | -------------------------------------- |
-| `/`                  | GET    | Health check (“Hello, World!”)                | Public                                 |
-| `/api/auth/register` | POST   | Register a user (name, email, password)       | Public                                 |
-| `/api/auth/login`    | POST   | Login (email, password) → sets cookie         | Public                                 |
-| `/api/auth/oauth`    | POST   | Google OAuth code exchange → sets cookie      | Public                                 |
-| `/api/auth/verify`   | GET    | Validate current session cookie               | Auth required (401 if missing/invalid) |
-| `/api/auth/logout`   | DELETE | Clear session cookie                          | Public (clears if present)             |
-| `/api/tasks`         | GET    | Get authenticated user’s tasks                | Auth required                          |
-| `/api/tasks`         | POST   | Create task (title, priority, status, labels) | Auth required                          |
-| `/api/tasks/:taskId` | PATCH  | Update task (title, priority, status, labels) | Auth required                          |
-| `/api/tasks/:taskId` | DELETE | Delete task                                   | Auth required                          |
+### Authentication Routes
+
+| Endpoint             | Method | Description                              | Access                                 |
+| -------------------- | ------ | ---------------------------------------- | -------------------------------------- |
+| `/`                  | GET    | Health check ("Hello, World!")           | Public                                 |
+| `/api/auth/register` | POST   | Register a user (name, email, password)  | Public                                 |
+| `/api/auth/login`    | POST   | Login (email, password) → sets cookie    | Public                                 |
+| `/api/auth/oauth`    | POST   | Google OAuth code exchange → sets cookie | Public                                 |
+| `/api/auth/verify`   | GET    | Validate current session cookie          | Auth required (401 if missing/invalid) |
+| `/api/auth/logout`   | DELETE | Clear session cookie                     | Public (clears if present)             |
+
+### Project Routes
+
+| Endpoint                   | Method | Description                  | Access        |
+| -------------------------- | ------ | ---------------------------- | ------------- |
+| `/api/projects`            | GET    | Get all user projects        | Auth required |
+| `/api/projects/:projectId` | GET    | Get project details          | Auth required |
+| `/api/projects`            | POST   | Create project (name, desc)  | Auth required |
+| `/api/projects/:projectId` | PATCH  | Update project (name, desc)  | Auth required |
+| `/api/projects/:projectId` | DELETE | Delete project and its tasks | Auth required |
+
+### Task Routes
+
+| Endpoint             | Method | Description                                        | Access        |
+| -------------------- | ------ | -------------------------------------------------- | ------------- |
+| `/api/tasks`         | GET    | Get tasks (with search, filter, sort, pagination)  | Auth required |
+| `/api/tasks`         | POST   | Create task (title, priority, status, labels, projectId) | Auth required |
+| `/api/tasks/:taskId` | PATCH  | Update task (title, priority, status, labels)      | Auth required |
+| `/api/tasks/:taskId` | DELETE | Delete task                                        | Auth required |
 
 <a id="installation-local-development"></a>
 
@@ -162,8 +241,9 @@ All authenticated routes require a valid `SessionToken` cookie.
 
 ### Prerequisites
 
-- Bun >= 1.0 (https://bun.sh)
-- PostgreSQL (local or remote)
+- **Bun** >= 1.0 ([https://bun.sh](https://bun.sh))
+- **PostgreSQL** (local or remote instance)
+- **Google OAuth Credentials** (for OAuth functionality)
 
 <a id="1-clone-and-install"></a>
 
@@ -179,9 +259,9 @@ bun install
 
 ### 2) Environment variables
 
-Copy and edit per app:
+Create `.env` files in each app directory:
 
-apps/api/.env
+**apps/api/.env**
 
 ```env
 # Node environment
@@ -196,19 +276,19 @@ APP_ORIGIN=http://localhost:3000
 # PostgreSQL connection string
 DATABASE_URL=postgres://username:password@localhost:5432/taskify
 
-# JWT secret
-JWT_SECRET="random-secret"
+# JWT secret (use a strong random string)
+JWT_SECRET="your-random-secret-key"
 
-# Google OAuth
+# Google OAuth credentials
 GOOGLE_CLIENT_ID="your-google-client-id"
 GOOGLE_CLIENT_SECRET="your-google-client-secret"
 REDIRECT_URI="http://localhost:3000/auth/callback"
 ```
 
-apps/web/.env
+**apps/web/.env**
 
 ```env
-# Backend base URL
+# Backend API base URL
 NEXT_PUBLIC_API_URL="http://localhost:8080"
 
 # Google OAuth (must match API config)
@@ -223,36 +303,42 @@ NEXT_PUBLIC_REDIRECT_URI="http://localhost:3000/auth/callback"
 Run from repository root:
 
 ```bash
-bun run db:migrate:dev     # run dev migrations
+bun run db:migrate:dev     # Run dev migrations
 ```
 
-Alternatively, within API app:
+Alternatively, within the API app:
 
 ```bash
 cd apps/api
 bunx prisma migrate dev
 ```
 
+To generate the Prisma client:
+
+```bash
+bun run db:generate
+```
+
 <a id="4-start-development"></a>
 
 ### 4) Start development
 
-- Start both apps using TurboRepo (from root):
+**Start both apps using TurboRepo (from root):**
 
 ```bash
 bun run dev
 ```
 
-- Or start individually:
+**Or start individually:**
 
 ```bash
-# API
+# API (http://localhost:8080)
 cd apps/api
-bun run dev  # http://localhost:8080
+bun run dev
 
-# Web
+# Web (http://localhost:3000)
 cd apps/web
-bun run dev  # http://localhost:3000
+bun run dev
 ```
 
 <a id="usage-guide"></a>
@@ -263,26 +349,35 @@ bun run dev  # http://localhost:3000
 
 ### Web app
 
-- Open http://localhost:3000
-- Register or Login
-- Optionally Continue with Google (OAuth — redirects to `/auth/callback`)
-- Manage tasks in Dashboard (search/filter/sort/paginate; labels via space-separated input)
+1. Open [http://localhost:3000](http://localhost:3000)
+2. Register a new account or Login with existing credentials
+3. Optionally use **Continue with Google** (OAuth — redirects to `/auth/callback`)
+4. Create and manage **Projects** from the Dashboard
+5. Click on a project to manage its **Tasks**
+6. Use search, filter by priority/status, and sort by date
+7. Add labels to tasks (space-separated input)
+8. Toggle dark/light theme using the theme switcher
 
 <a id="monorepo-scripts-root"></a>
 
 ### Monorepo scripts (root)
 
-- `bun run dev` — Start all apps in dev
-- `bun run build` — Build all
-- `bun run start` — Start (after build)
-- `bun run lint` / `bun run lint:fix` — Lint
-- `bun run check-types` — Type-check
-- `bun run format` — Prettier
-- `bun run clean` — Clean outputs
-- DB helpers: `bun run db:generate`, `bun run db:migrate:dev`, `bun run db:migrate:deploy`
+| Command                    | Description                   |
+| -------------------------- | ----------------------------- |
+| `bun run dev`              | Start all apps in dev mode    |
+| `bun run build`            | Build all apps                |
+| `bun run start`            | Start all apps (after build)  |
+| `bun run lint`             | Lint all apps                 |
+| `bun run lint:fix`         | Fix lint issues               |
+| `bun run check-types`      | Type-check all apps           |
+| `bun run format`           | Format code with Prettier     |
+| `bun run clean`            | Clean build outputs           |
+| `bun run db:generate`      | Generate Prisma client        |
+| `bun run db:migrate:dev`   | Run development migrations    |
+| `bun run db:migrate:deploy`| Deploy migrations (production)|
 
 <a id="authors"></a>
 
 ## 👥 Authors
 
-- AvgBlank — https://github.com/AvgBlank
+- **AvgBlank** — [https://github.com/AvgBlank](https://github.com/AvgBlank)
