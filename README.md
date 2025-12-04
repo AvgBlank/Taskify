@@ -226,12 +226,12 @@ All authenticated routes require a valid `SessionToken` cookie.
 
 ### Task Routes
 
-| Endpoint             | Method | Description                                        | Access        |
-| -------------------- | ------ | -------------------------------------------------- | ------------- |
-| `/api/tasks`         | GET    | Get tasks (with search, filter, sort, pagination)  | Auth required |
+| Endpoint             | Method | Description                                              | Access        |
+| -------------------- | ------ | -------------------------------------------------------- | ------------- |
+| `/api/tasks`         | GET    | Get tasks (with search, filter, sort, pagination)        | Auth required |
 | `/api/tasks`         | POST   | Create task (title, priority, status, labels, projectId) | Auth required |
-| `/api/tasks/:taskId` | PATCH  | Update task (title, priority, status, labels)      | Auth required |
-| `/api/tasks/:taskId` | DELETE | Delete task                                        | Auth required |
+| `/api/tasks/:taskId` | PATCH  | Update task (title, priority, status, labels)            | Auth required |
+| `/api/tasks/:taskId` | DELETE | Delete task                                              | Auth required |
 
 <a id="installation-local-development"></a>
 
@@ -362,19 +362,19 @@ bun run dev
 
 ### Monorepo scripts (root)
 
-| Command                    | Description                   |
-| -------------------------- | ----------------------------- |
-| `bun run dev`              | Start all apps in dev mode    |
-| `bun run build`            | Build all apps                |
-| `bun run start`            | Start all apps (after build)  |
-| `bun run lint`             | Lint all apps                 |
-| `bun run lint:fix`         | Fix lint issues               |
-| `bun run check-types`      | Type-check all apps           |
-| `bun run format`           | Format code with Prettier     |
-| `bun run clean`            | Clean build outputs           |
-| `bun run db:generate`      | Generate Prisma client        |
-| `bun run db:migrate:dev`   | Run development migrations    |
-| `bun run db:migrate:deploy`| Deploy migrations (production)|
+| Command                     | Description                    |
+| --------------------------- | ------------------------------ |
+| `bun run dev`               | Start all apps in dev mode     |
+| `bun run build`             | Build all apps                 |
+| `bun run start`             | Start all apps (after build)   |
+| `bun run lint`              | Lint all apps                  |
+| `bun run lint:fix`          | Fix lint issues                |
+| `bun run check-types`       | Type-check all apps            |
+| `bun run format`            | Format code with Prettier      |
+| `bun run clean`             | Clean build outputs            |
+| `bun run db:generate`       | Generate Prisma client         |
+| `bun run db:migrate:dev`    | Run development migrations     |
+| `bun run db:migrate:deploy` | Deploy migrations (production) |
 
 <a id="authors"></a>
 
